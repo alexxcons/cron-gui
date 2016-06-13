@@ -1,0 +1,3 @@
+[submodule "pkg-cron"]
+	path = pkg-cron
+	url = https://alioth.debian.org/anonscm/git/pkg-cron/pkg-cron.git
