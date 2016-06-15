@@ -16,6 +16,83 @@ check_error(msg)
 	fprintf(stderr, "\"%s\":%d: %s\n", Filename, LineNumber-1, msg);
 }
 
+void bitStrToString(bitstr_t* bitstr, char* string, unsigned int max,char *labels[])
+{
+	int i, commaNeededOnNextRange = FALSE;
+	char range[60][4];
+	for( i= 0; i< 60; i++)
+	{
+		range[i][0] = '\0';
+	}
+
+	unsigned int rangeIndex = 0;
+
+	for( i=0; i< max; i++)
+	{
+		if( bit_test(bitstr,i) )
+		{
+			if(labels)
+			{
+				strcat(range[rangeIndex],labels[i]);
+			}
+			else
+			{
+				int length = snprintf( NULL, 0, "%d", i );
+				char* temp = malloc( length + 1 );// one more for 0-terminator
+				snprintf( temp, length + 1, "%d", i );
+				strcat(range[rangeIndex],temp);
+				free(temp);
+			}
+			rangeIndex++;
+		}
+		else
+		{
+
+			if(rangeIndex > 0)
+			{
+				rangeToString(&range,string,&rangeIndex,&commaNeededOnNextRange);
+			}
+		}
+	}
+	if(rangeIndex > 0)
+	{
+		rangeToString(&range,string,&rangeIndex,&commaNeededOnNextRange);
+	}
+}
+
+void rangeToString(char range[60][4] , char* string, unsigned int* rangeIndex, int* commaNeededOnNextRange)
+{
+	int i;
+	if(*commaNeededOnNextRange)
+	{
+		strcat(string,",");
+	}
+	if(*rangeIndex <= 2)
+	{
+		strcat(string,range[0]);
+		range[0][0] = '\0';
+		if( *rangeIndex == 2 )
+		{
+			strcat(string,",");
+			strcat(string,range[1]);
+			range[1][0] = '\0';
+		}
+
+	}
+	else // more than two: it pays of to use a range
+	{
+		strcat(string,range[0]);
+		strcat(string,"-");
+		strcat(string,range[*rangeIndex-1]);
+		for( i= 0; i< *rangeIndex; i++)
+		{
+			range[i][0] = '\0';
+		}
+	}
+	*rangeIndex = 0;
+	*commaNeededOnNextRange = TRUE;
+}
+
 static int
 read_cron_tab()
 {
@@ -45,9 +122,9 @@ read_cron_tab()
 				e = load_entry(crontab, check_error, &pw, envp);
 
 				//TODO:
-				//- support for ranges
 				//- support for @monthly etc.
 				//- support for *
+				//- unit-tests
 
 				printf("debug1\n" );
 				//dowToString(*(e->dow));
@@ -89,46 +166,6 @@ read_cron_tab()
 		return (-2);
 	}
 	return (0);
-}
-
-void bitStrToString(bitstr_t* bitstr, char* string, unsigned int max,char *labels[])
-{
-	int i, commaNeeded = FALSE;
-	int rangeDetected = FALSE;
-	int countContinousFlags = 0;
-	char temp[20];
-
-	for( i=0; i< max; i++)
-	{
-		if( bit_test(bitstr,i) )
-		{
-			countContinousFlags++;
-
-			if ( commaNeeded )
-			{
-				strcat(string,",");
-			}
-			if(labels)
-			{
-				strcat(string,labels[i]);
-			}
-			else
-			{
-				int length = snprintf( NULL, 0, "%d", i );
-				char* temp = malloc( length + 1 );// one more for 0-terminator
-				snprintf( temp, length + 1, "%d", i );
-				strcat(string,temp);
-				free(temp);
-			}
-
-			commaNeeded = TRUE;
-		}
-		else
-		{
-			countContinousFlags = 0;
-			// merge temp with string here
-		}
-	}
 }
 
 int main(int argc, char *argv[])

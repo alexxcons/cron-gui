@@ -1,1 +1,6 @@
 /Debug/
+/cron-gui
+/crontab
+/crontab.save
+/*.o
+/AlexTest1.glade
