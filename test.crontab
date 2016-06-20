@@ -1,0 +1,7 @@
+
+# test ranges 
+0-23,24,25,26,40-45,50-59 * * JAN-MAR,MAY-JUN,AUG-OCT,DEC SAT,2,SUN someCommand
+
+# test wildcards
+* * * * * some Command
+

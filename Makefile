@@ -14,18 +14,23 @@ COMPILER_FLAGS += -DDEBUGGING=0
 COMPILER_FLAGS += -DDEBIAN=1
 
 # files to work with:
-SOURCES = 	pkg-cron/entry.c pkg-cron/env.c pkg-cron/misc.c main.c
+SOURCES = 	pkg-cron/entry.c pkg-cron/env.c pkg-cron/misc.c readCrontab.c main.c
+SOURCES_TEST = 	pkg-cron/entry.c pkg-cron/env.c pkg-cron/misc.c readCrontab.c test.c
 #OBJS = 	main.o entry.o 
 TARGET =	cron-gui
 
 # .o files have same name as .cpp files
 OBJS = $(SOURCES:%.c=%.o)
+OBJS_TEST = $(SOURCES_TEST:%.c=%.o)
 
 # Link command to compile + build binary:
 link:	$(OBJS)
-	gcc entry.o env.o misc.o main.o $(LINKER_FLAGS) -o $(TARGET) $(LIBS)
+	gcc entry.o env.o misc.o readCrontab.o main.o $(LINKER_FLAGS) -o $(TARGET) $(LIBS)
 
 main.o: main.c
+	gcc $(COMPILER_FLAGS) -DMAIN_PROGRAM=1 -c $<
+	
+test.o: test.c
 	gcc $(COMPILER_FLAGS) -DMAIN_PROGRAM=1 -c $<
 	
 # Compilation command:
@@ -39,4 +44,7 @@ all: link
 
 #support for "make clean"
 clean:
-	rm -f $(OBJS) $(TARGET) $(LIBRARY)
+	rm -f $(OBJS) $(OBJS_TEST) $(TARGET) test
+	
+test: $(OBJS_TEST)
+	gcc entry.o env.o misc.o readCrontab.o test.o $(LINKER_FLAGS) -o test $(LIBS)
