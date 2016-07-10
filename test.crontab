@@ -13,7 +13,9 @@
 @daily some Command
 @hourly some Command
 
-# test stepwise stuff
-2-40/2 * * * * some Command
-0-20/2,30-40/2 * * * * some Command
+# dom starts by 1 --> test that !
+* * 3 * * some Command
+
+# stepwise stuff
 */6 */5 */4 */3 */2 some Command
+*/50 * */31 */12 */1 some Command

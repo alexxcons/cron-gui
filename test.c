@@ -107,19 +107,19 @@ int testCrontab()
 				{
 					char result[200] = "\0";
 					entryToString(e, result);
-					assertStrEq("2-40/2 * * * * some Command",result);
+					assertStrEq("* * 3 * * some Command",result);
 				}
-				if(LineNumber == 18)
-				{
-					char result[200] = "\0";
-					entryToString(e, result);
-					assertStrEq("0-20/2,30-40/2 * * * * some Command",result);
-				}
-				if(LineNumber == 19)
+				if(LineNumber == 20)
 				{
 					char result[200] = "\0";
 					entryToString(e, result);
 					assertStrEq("*/6 */5 */4 */3 */2 some Command",result);
+				}
+				if(LineNumber == 21)
+				{
+					char result[200] = "\0";
+					entryToString(e, result);
+					assertStrEq("*/50 * */31 */12 * some Command",result);
 				}
 
 				if (e)

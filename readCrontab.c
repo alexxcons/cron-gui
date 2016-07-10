@@ -160,8 +160,7 @@ void entryToString(entry *e, char* string)
 void minuteOfEntryToString(entry *e, char* string)
 {
 	if( e->flags & MIN_STAR )
-		strcat(string,"*");
-	//TODO:
+		stepsStarToString(e->minute,MINUTE_COUNT,string);
 	else
 		bitStrToString(e->minute,string,MINUTE_COUNT,NULL);
 }
@@ -169,7 +168,7 @@ void minuteOfEntryToString(entry *e, char* string)
 void hourOfEntryToString(entry *e, char* string)
 {
 	if( e->flags & HR_STAR )
-		strcat(string,"*");
+		stepsStarToString(e->hour,HOUR_COUNT,string);
 	else
 		bitStrToString(e->hour,string,HOUR_COUNT,NULL);
 }
@@ -177,26 +176,24 @@ void hourOfEntryToString(entry *e, char* string)
 void domOfEntryToString(entry *e, char* string)
 {
 	if( e->flags & DOM_STAR )
-		strcat(string,"*");
+		stepsStarToString(e->dom,DOM_COUNT,string);
 	else
 		bitStrToString(e->dom,string,DOM_COUNT,NULL);
 }
 
 void monthOfEntryToString(entry *e, char* string)
 {
-	// A bit strange, there is no month-star ... so we just test for 'JAN-DEC'
-	char temp[100] = "\0";
-	bitStrToString(e->month,temp,MONTH_COUNT,MonthNames);
-	if( strcmp(temp,"JAN-DEC\0") != 0)
-		strcat(string,"*");
-	else
-		strcat(string,temp);
+	// A bit strange, there is no month-star ... so we just test if all bits are set (or all stepwise)
+	if( stepsStarToString(e->month,MONTH_COUNT,string) == FALSE )
+	{
+		bitStrToString(e->month,string,MONTH_COUNT,MonthNames);
+	}
 }
 
 void dowOfEntryToString(entry *e, char* string)
 {
 	if( e->flags & DOW_STAR )
-		strcat(string,"*");
+		stepsStarToString(e->dow, DOW_COUNT-1,string);// -1, because for compartibilty cron keeps sundays twice ( element #7 )
 	else
 		bitStrToString(e->dow,string, DOW_COUNT-1, DowNames);// -1, because for compartibilty cron keeps sundays twice ( element #7 )
 }
@@ -206,16 +203,62 @@ void commandOfEntryToString(entry *e, char* string)
 	strcat(string,e->cmd);
 }
 
+// we only check for "stepwise" notation for wildcard(star). For everything else it is considered to be more readable to just write all numbers down
+int stepsStarToString(bitstr_t* bitstr, unsigned int max, char* string)
+{
+	if(allBitsSet(bitstr,max)) // no steps used
+	{
+		strcat(string,"*");
+		return TRUE;
+	}
+	int stepSize;
+	for( stepSize=2; stepSize < max ; stepSize++)
+	{
+		if (hasStepWide(bitstr, max,stepSize))
+		{
+			strcat(string,"*/");
+			int length = snprintf( NULL, 0, "%d", stepSize );
+			char* temp = malloc( length + 1 );// one more for 0-terminator
+			snprintf( temp, length + 1, "%d", stepSize );
+			strcat(string,temp);
+			return TRUE;
+		}
+	}
+	return FALSE;
+}
+
+
+int hasStepWide(bitstr_t* bitstr, unsigned int max, unsigned int stepwide)
+{// attention! Method does not check for offsets in stepwide (e.g. if steps start with bit 2)
+	unsigned int i;
+	for( i=0; i< max; i++)
+	{
+		if( i%stepwide == 0 )
+		{
+			if(!bit_test(bitstr,i))
+				return FALSE;
+		}
+		else
+		{
+			if(bit_test(bitstr,i))
+				return FALSE;
+		}
+	}
+	return TRUE;
+}
+
 void bitStrToString(bitstr_t* bitstr, char* string, unsigned int max,char *labels[])
 {
 	int i, commaNeededOnNextRange = FALSE;
-	char range[60][4];
+	char range[60][4];//max 60 because of 60 minutes
 	for( i= 0; i< 60; i++)
 	{
 		range[i][0] = '\0';
 	}
 
 	unsigned int rangeIndex = 0;
+
+	unsigned int stepIndex = 0;
 
 	for( i=0; i< max; i++)
 	{
@@ -227,9 +270,12 @@ void bitStrToString(bitstr_t* bitstr, char* string, unsigned int max,char *label
 			}
 			else
 			{
-				int length = snprintf( NULL, 0, "%d", i );
+				int value = i;
+				if ( max == DOM_COUNT )// dom has offset 1
+					value++;
+				int length = snprintf( NULL, 0, "%d", value );
 				char* temp = malloc( length + 1 );// one more for 0-terminator
-				snprintf( temp, length + 1, "%d", i );
+				snprintf( temp, length + 1, "%d", value );
 				strcat(range[rangeIndex],temp);
 				free(temp);
 			}
@@ -309,15 +355,9 @@ int read_cron_tab()
 				break;
 			case FALSE:
 				e = load_entry(crontab, check_error, &pw, envp);
-
-				//TODO:
-				//- support for step-size "/" --> take care for * !
-
-				printf("debug1\n" );
 				char string[MAX_COMMAND + 1000] = "\0";
 				entryToString(e,string);
 				printf("string: %s\n",string );
-				printf("debug2\n" );
 				if (e)
 					free(e);
 				break;
