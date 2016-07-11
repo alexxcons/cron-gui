@@ -160,7 +160,10 @@ void entryToString(entry *e, char* string)
 void minuteOfEntryToString(entry *e, char* string)
 {
 	if( e->flags & MIN_STAR )
-		stepsStarToString(e->minute,MINUTE_COUNT,string);
+	{
+		if( stepsStarToString(e->minute,MINUTE_COUNT,string) == FALSE ) // only false for some silly case (bug in cron) .. stepSize > max TODO: report + fix bug in cron
+			strcat(string,"*");
+	}
 	else
 		bitStrToString(e->minute,string,MINUTE_COUNT,NULL);
 }
@@ -168,7 +171,10 @@ void minuteOfEntryToString(entry *e, char* string)
 void hourOfEntryToString(entry *e, char* string)
 {
 	if( e->flags & HR_STAR )
-		stepsStarToString(e->hour,HOUR_COUNT,string);
+	{
+		if( stepsStarToString(e->hour,HOUR_COUNT,string) == FALSE ) // TODO .. see above
+			strcat(string,"*");
+	}
 	else
 		bitStrToString(e->hour,string,HOUR_COUNT,NULL);
 }
@@ -176,7 +182,10 @@ void hourOfEntryToString(entry *e, char* string)
 void domOfEntryToString(entry *e, char* string)
 {
 	if( e->flags & DOM_STAR )
-		stepsStarToString(e->dom,DOM_COUNT,string);
+	{
+		if( stepsStarToString(e->dom,DOM_COUNT,string) == FALSE ) // TODO .. see above
+			strcat(string,"*");
+	}
 	else
 		bitStrToString(e->dom,string,DOM_COUNT,NULL);
 }
@@ -186,6 +195,7 @@ void monthOfEntryToString(entry *e, char* string)
 	// A bit strange, there is no month-star ... so we just test if all bits are set (or all stepwise)
 	if( stepsStarToString(e->month,MONTH_COUNT,string) == FALSE )
 	{
+		printf("debug123:, %s",string);
 		bitStrToString(e->month,string,MONTH_COUNT,MonthNames);
 	}
 }
@@ -193,7 +203,10 @@ void monthOfEntryToString(entry *e, char* string)
 void dowOfEntryToString(entry *e, char* string)
 {
 	if( e->flags & DOW_STAR )
-		stepsStarToString(e->dow, DOW_COUNT-1,string);// -1, because for compartibilty cron keeps sundays twice ( element #7 )
+	{
+		if( stepsStarToString(e->dow, DOW_COUNT-1,string) == FALSE)// -1, because for compartibilty cron keeps sundays twice ( element #7 )
+			strcat(string,"*"); // TODO: See above
+	}
 	else
 		bitStrToString(e->dow,string, DOW_COUNT-1, DowNames);// -1, because for compartibilty cron keeps sundays twice ( element #7 )
 }

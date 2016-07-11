@@ -1,10 +1,13 @@
 				
 				
 Must Have:
+- bugfix stepwise logic (last test)
 - print crontab in gui
-- comment lines + environment variable lines
+- comment lines + environment variable lines ( dont show border, if possible)
 - generate wizards in code
 - make use of menu bar
+- application argument
+- root /no-root? / sudo ?
 
 Features:
 
