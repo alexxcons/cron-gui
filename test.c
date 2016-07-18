@@ -118,7 +118,7 @@ int testCrontab()
 				if(LineNumber == 21) // */50 * */31 */12 * some Command"
 				{
 					// result is: */50 * * Jan * some Command
-					// TODO: build patch for cron-bug
+					// TODO: build patch for cron-bug: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=830821
 					//char result[200] = "\0";
 					//entryToString(e, result);
 					//assertStrEq("*/50 * * * * some Command",result); // silly stepwise-values should be ignored

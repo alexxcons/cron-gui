@@ -271,8 +271,6 @@ void bitStrToString(bitstr_t* bitstr, char* string, unsigned int max,char *label
 
 	unsigned int rangeIndex = 0;
 
-	unsigned int stepIndex = 0;
-
 	for( i=0; i< max; i++)
 	{
 		if( bit_test(bitstr,i) )
@@ -342,7 +340,58 @@ void rangeToString(char range[60][4] , char* string, unsigned int* rangeIndex, i
 	*commaNeededOnNextRange = TRUE;
 }
 
-int read_cron_tab()
+int get_comment(FILE *file, char *comment, int comment_size_max)
+{
+	long	filepos = ftell(file);
+	int isComment = FALSE;
+	int	ch;
+	while (EOF != (ch = get_char(file)))
+	{
+		if( ch == '\n' )
+			break;
+
+		if( ch == '#')
+			isComment = TRUE;
+
+		if( !isComment && ch != ' ' && ch != '\t') // stop on first non comment, non whitespace if no comment found so far
+			break;
+
+		if (comment_size_max > 1) // anything longer comment_size_max than is just cut
+		{
+			*comment++ = (char) ch;
+			comment_size_max--;
+		}
+	}
+	if( isComment )
+	{
+		if (comment_size_max > 0)
+			*comment = '\0';
+		return TRUE;
+	}
+	else
+	{
+		fseek(file, filepos, 0);
+		return FALSE;
+	}
+}
+
+void get_leading_comments(FILE *crontab, GtkWidget *mainTable)
+{
+	char comment[MAX_ENVSTR];
+	int commentFound = TRUE;
+	while( commentFound )
+	{
+		commentFound = get_comment(crontab,comment,MAX_ENVSTR);
+		if( commentFound )
+		{
+			addComment(mainTable,comment);
+			printf("%s\n",comment );
+		}
+	}
+
+}
+
+int read_cron_tab(GtkWidget *mainTable)
 {
 	entry	*e;
 	int eof = FALSE;
@@ -361,6 +410,7 @@ int read_cron_tab()
 
 	while (!CheckErrorCount && !eof)
 	{
+		get_leading_comments(crontab, mainTable);
 		switch (load_env(envstr, crontab))
 		{
 			case ERR:
@@ -368,13 +418,15 @@ int read_cron_tab()
 				break;
 			case FALSE:
 				e = load_entry(crontab, check_error, &pw, envp);
-				char string[MAX_COMMAND + 1000] = "\0";
+				char string[MAX_COMMAND] = "\0";
 				entryToString(e,string);
-				printf("string: %s\n",string );
+				printf("Cronjob: %s\n",string );
 				if (e)
 					free(e);
 				break;
 			case TRUE:
+				printf("environment var: %s\n",envstr );
+				addVariable(mainTable, envstr);
 				break;
 		}
 	}

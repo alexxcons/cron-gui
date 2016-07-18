@@ -1,13 +1,13 @@
 				
 				
 Must Have:
-- bugfix stepwise logic (last test)
 - print crontab in gui
-- comment lines + environment variable lines ( dont show border, if possible)
 - generate wizards in code
 - make use of menu bar
 - application argument
 - root /no-root? / sudo ?
+- use automake
+- build patch for step-size stuff in crontab: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=830821
 
 Features:
 

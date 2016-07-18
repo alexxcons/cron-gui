@@ -2,6 +2,35 @@
 <!-- Generated with glade 3.18.3 -->
 <interface>
   <requires lib="gtk+" version="3.12"/>
+  <object class="GtkBox" id="comment">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <child>
+      <object class="GtkLabel" id="comment_lineNumber">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">12</property>
+        <property name="justify">right</property>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">False</property>
+        <property name="position">0</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkEntry" id="comment_textbox">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="has_frame">False</property>
+      </object>
+      <packing>
+        <property name="expand">True</property>
+        <property name="fill">True</property>
+        <property name="position">1</property>
+      </packing>
+    </child>
+  </object>
   <object class="GtkBox" id="cronjob.advanced">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -11,6 +40,7 @@
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">12</property>
+        <property name="justify">right</property>
       </object>
       <packing>
         <property name="expand">False</property>
@@ -104,6 +134,7 @@
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">12</property>
+        <property name="justify">right</property>
       </object>
       <packing>
         <property name="expand">False</property>
@@ -352,14 +383,15 @@
       </object>
     </child>
   </object>
-  <object class="GtkBox" id="other.stuff">
+  <object class="GtkBox" id="variable">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <child>
-      <object class="GtkLabel" id="other_lineNumber">
+      <object class="GtkLabel" id="variable_lineNumber">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">12</property>
+        <property name="justify">right</property>
       </object>
       <packing>
         <property name="expand">False</property>
@@ -368,9 +400,10 @@
       </packing>
     </child>
     <child>
-      <object class="GtkEntry" id="text">
+      <object class="GtkEntry" id="variable_textbox">
         <property name="visible">True</property>
         <property name="can_focus">True</property>
+        <property name="has_frame">False</property>
       </object>
       <packing>
         <property name="expand">True</property>

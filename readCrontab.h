@@ -2,6 +2,7 @@
 #define READ_CRONTAB_H
 
 #include "pkg-cron/cron.h"
+#include <gtk/gtk.h>
 
 void check_error(	char	*msg);
 
@@ -16,6 +17,6 @@ void entryToString(entry *e, char* string);
 void bitStrToString(bitstr_t* bitstr, char* string, unsigned int max,char *labels[]);
 void rangeToString(char range[60][4] , char* string, unsigned int* rangeIndex, int* commaNeededOnNextRange);
 
-int read_cron_tab();
+int read_cron_tab(GtkWidget *mainTable);
 
 #endif //READ_CRONTAB_H
