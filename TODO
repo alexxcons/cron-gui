@@ -1,8 +1,8 @@
 				
 				
 Must Have:
-- print crontab in gui
-- generate wizards in code
+- check that string -size is not exceeded
+- generate wizards in code ? (css ? )
 - make use of menu bar
 - application argument
 - root /no-root? / sudo ?

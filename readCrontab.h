@@ -4,6 +4,8 @@
 #include "pkg-cron/cron.h"
 #include <gtk/gtk.h>
 
+#define	MAX_AT_STRING	10	/* Actually the maximum is 9 characters: @monthly  */
+
 void check_error(	char	*msg);
 
 void minuteOfEntryToString(entry *e, char* string);

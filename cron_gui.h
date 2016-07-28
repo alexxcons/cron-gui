@@ -5,10 +5,10 @@
 
 GtkWidget *main_window;
 
-GtkWidget* openGTKWindow(GtkWidget *parent, char* file, char* windowName);
+GtkWidget* openGTKWindow(GtkBuilder *builder, GtkWidget *parent, char* windowName);
 
-//void addSimpleCronJob();
-//void addAdvancedCronJob();
+void addSimpleCronJob(GtkWidget *mainTable, const char *simpleSelector, const char *command);
+void addAdvancedCronJob(GtkWidget *mainTable, const char *minute, const char *hour, const char *dom, const char *month, const char *dow, const char *command);
 void addComment(GtkWidget *mainTable, const char *comment);
 void addVariable(GtkWidget *mainTable, const char *text);
 

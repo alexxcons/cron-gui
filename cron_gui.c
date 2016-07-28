@@ -1,16 +1,38 @@
 #include "cron_gui.h"
 
+#include <stdio.h>
+#include <string.h>
+
 int lineNumberGUI = 1;
 
-GtkWidget* openGTKWindow(GtkWidget *parent, char* file, char* windowName)
+const char * simpleTimingValues[] = {
+    "@reboot",
+    "@yearly",
+    "@monthly",
+    "@weekly",
+    "@daily",
+    "@hourly"
+};
+const int SIMPLE_TIMING_VALUES_SIZE	= 6;
+
+//int getMaxLineNumberPadding(GtkWidget *mainTable)
+//{
+//	GList *children = gtk_container_get_children(GTK_CONTAINER(mainTable));
+//	while ((children = g_list_next(children)) != NULL)
+//	{
+//		if (g_strcasecmp(gtk_widget_get_name(children->data), "GtkButton") == 0)
+//		{
+//			g_signal_connect(children->data, "clicked", G_CALLBACK(on_minute_pressed), NULL);
+//			printf("g_signal_connect\n");
+//		}
+//	}
+//}
+
+GtkWidget* openGTKWindow(GtkBuilder *builder, GtkWidget *parent, char* windowName)
 {
-    GtkBuilder *builder = gtk_builder_new();
-    gtk_builder_add_from_file (builder, file, NULL);
     GtkWidget *window = GTK_WIDGET(gtk_builder_get_object(builder, windowName));
     if( parent != NULL )
     	gtk_window_set_transient_for (window,parent);
-    gtk_builder_connect_signals(builder, NULL);
-    g_object_unref(builder);
     gtk_widget_show(window);
     return window;
 }
@@ -53,6 +75,53 @@ void addVariable(GtkWidget *mainTable, const char *text)
 	g_object_unref(builder);
 }
 
+void addSimpleCronJob(GtkWidget *mainTable, const char *simpleSelector, const char *command)
+{
+	GtkBuilder *builder = gtk_builder_new();
+	gtk_builder_add_from_file (builder, "main_window.glade", NULL);
+	GtkWidget *fragment = GTK_WIDGET(gtk_builder_get_object(builder, "cronjob.simple"));
+	GtkWidget *commandBox = gtk_builder_get_object (builder,"simple_command");
+	gtk_entry_set_text(commandBox,command);
+	GtkWidget *choiceBox = gtk_builder_get_object (builder,"simple_choice");
+	int i;
+	for( i = 0; i < SIMPLE_TIMING_VALUES_SIZE ;i++)
+	{
+		gtk_combo_box_text_append_text(choiceBox,simpleTimingValues[i]);
+		if(strcmp(simpleTimingValues[i],simpleSelector) == 0)
+		{
+			gtk_combo_box_set_active (choiceBox,i);
+		}
+	}
+	GtkWidget *lineNumberLabel = gtk_builder_get_object (builder,"simple_lineNumber");
+	fillFragmentLineNumber(lineNumberLabel);
+	gtk_builder_connect_signals(builder, NULL);
+	gtk_container_add(mainTable,fragment);
+	g_object_unref(builder);
+}
+
+void addAdvancedCronJob(GtkWidget *mainTable, const char *minute, const char *hour, const char *dom, const char *month, const char *dow, const char *command)
+{
+	GtkBuilder *builder = gtk_builder_new();
+	gtk_builder_add_from_file (builder, "main_window.glade", NULL);
+	GtkWidget *fragment = GTK_WIDGET(gtk_builder_get_object(builder, "cronjob.advanced"));
+	GtkWidget *commandBox = gtk_builder_get_object (builder,"advanced_command");
+	gtk_entry_set_text(commandBox,command);
+	GtkWidget *minuteBox = gtk_builder_get_object (builder,"advanced_minute");
+	gtk_button_set_label (minuteBox,minute);
+	GtkWidget *hourBox = gtk_builder_get_object (builder,"advanced_hour");
+	gtk_button_set_label (hourBox,hour);
+	GtkWidget *domBox = gtk_builder_get_object (builder,"advanced_dom");
+	gtk_button_set_label (domBox,dom);
+	GtkWidget *monthBox = gtk_builder_get_object (builder,"advanced_month");
+	gtk_button_set_label (monthBox,month);
+	GtkWidget *dowBox = gtk_builder_get_object (builder,"advanced_dow");
+	gtk_button_set_label (dowBox,dow);
+	GtkWidget *lineNumberLabel = gtk_builder_get_object (builder,"advanced_lineNumber");
+	fillFragmentLineNumber(lineNumberLabel);
+	gtk_builder_connect_signals(builder, NULL);
+	gtk_container_add(mainTable,fragment);
+	g_object_unref(builder);
+}
 //void connectSignalsCronjobAdvanced(GtkWidget *cronjob)
 //{
 //	GList *children = gtk_container_get_children(GTK_CONTAINER(cronjob));
@@ -78,8 +147,21 @@ void on_main_window_destroy()
 
 void on_minute_pressed(GtkWidget *button)
 {
-	printf("%s\n",gtk_widget_get_name(button));
-    GtkWidget       *window = openGTKWindow(main_window, "minute_dialog.glade", "MinuteWizard");
+	GtkCssProvider *cssProvider = gtk_css_provider_new ();
+	gtk_css_provider_load_from_path(cssProvider,"./test.css",NULL);
+	GtkBuilder *builder = gtk_builder_new();
+	gtk_builder_add_from_file (builder, "minute_dialog.glade", NULL);
+    GtkWidget       *window= GTK_WIDGET(gtk_builder_get_object(builder, "MinuteWizard"));
+    gtk_window_set_transient_for (window,main_window);
+	//gtk_style_context_add_provider(gtk_widget_get_style_context(window),cssProvider,GTK_STYLE_PROVIDER_PRIORITY_USER);
+
+	gtk_style_context_add_provider_for_screen(gdk_screen_get_default(),
+	                                              GTK_STYLE_PROVIDER(cssProvider),
+	                                              GTK_STYLE_PROVIDER_PRIORITY_USER);
+    gtk_builder_connect_signals(builder, NULL);
+
+    gtk_widget_show(window);
+    g_object_unref(builder);
 }
 
 void on_hour_pressed(GtkWidget *button)

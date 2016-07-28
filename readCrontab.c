@@ -157,6 +157,34 @@ void entryToString(entry *e, char* string)
 	commandOfEntryToString(e,string);
 }
 
+void entryToFragment(entry *e, GtkWidget *mainTable)
+{
+	char atString[MAX_AT_STRING] = "\0";
+	if(appendIf_At(e,atString))
+	{
+		char command[MAX_COMMAND] = "\0";
+		commandOfEntryToString(e,command);
+		addSimpleCronJob(mainTable,atString,command );
+	}
+	else
+	{
+		char minute[MAX_COMMAND] = "\0";
+		char hour[MAX_COMMAND] = "\0";
+		char dom[MAX_COMMAND] = "\0";
+		char month[MAX_COMMAND] = "\0";
+		char dow[MAX_COMMAND] = "\0";
+		char command[MAX_COMMAND] = "\0";
+		minuteOfEntryToString(e,minute);
+		hourOfEntryToString(e,hour);
+		domOfEntryToString(e,dom);
+		monthOfEntryToString(e,month);
+		dowOfEntryToString(e,dow);
+		commandOfEntryToString(e,command);
+		addAdvancedCronJob(mainTable,minute,hour,dom,month,dow,command);
+	}
+
+}
+
 void minuteOfEntryToString(entry *e, char* string)
 {
 	if( e->flags & MIN_STAR )
@@ -410,7 +438,7 @@ int read_cron_tab(GtkWidget *mainTable)
 
 	while (!CheckErrorCount && !eof)
 	{
-		get_leading_comments(crontab, mainTable);
+		get_leading_comments(crontab,mainTable);
 		switch (load_env(envstr, crontab))
 		{
 			case ERR:
@@ -420,6 +448,7 @@ int read_cron_tab(GtkWidget *mainTable)
 				e = load_entry(crontab, check_error, &pw, envp);
 				char string[MAX_COMMAND] = "\0";
 				entryToString(e,string);
+				entryToFragment(e,mainTable);
 				printf("Cronjob: %s\n",string );
 				if (e)
 					free(e);
