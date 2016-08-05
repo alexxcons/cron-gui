@@ -9,6 +9,7 @@ int main(int argc, char *argv[])
 	gtk_builder_add_from_file (builder, "main_window.glade", NULL);
     main_window = openGTKWindow(builder, NULL, "main_window");
     GtkWidget *mainTable = gtk_builder_get_object (builder,"mainTable");
+    initSizeGroups();
     read_cron_tab(mainTable);
 	gtk_builder_connect_signals(builder, NULL);
 

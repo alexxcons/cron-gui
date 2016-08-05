@@ -1,0 +1,18 @@
+.button {
+  padding: 30px; /* px unit added */
+  /* background-color: shade (@bg_color, 1.41);*/
+  background-color: red;
+}
+   
+@define-color bg_color1 rgb (255, 0, 0);
+@define-color bg_color2 rgb (71, 71, 229);
+
+.toggle {
+	  background-color: red;
+  color: red;
+  background-image: -gtk-gradient (linear,
+                                   left top,
+                                   right bottom,
+                                   from(@bg_color1),
+                                   to(@bg_color2));
+}

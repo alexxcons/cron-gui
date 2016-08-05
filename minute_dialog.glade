@@ -93,6 +93,9 @@
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                       </object>
+                      <packing>
+                        <property name="position">1</property>
+                      </packing>
                     </child>
                     <child type="tab">
                       <object class="GtkLabel" id="everyNMinutes">
@@ -559,6 +562,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
+                            <property name="draw_indicator">True</property>
                           </object>
                           <packing>
                             <property name="left_attach">7</property>

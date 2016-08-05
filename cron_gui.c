@@ -2,8 +2,9 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 
-int lineNumberGUI = 1;
+static int lineNumberGUI = 1;
 
 const char * simpleTimingValues[] = {
     "@reboot",
@@ -15,18 +16,32 @@ const char * simpleTimingValues[] = {
 };
 const int SIMPLE_TIMING_VALUES_SIZE	= 6;
 
-//int getMaxLineNumberPadding(GtkWidget *mainTable)
+GtkSizeGroup * sizeGroupLineNumbers = NULL;
+GtkSizeGroup * sizeGroupTimePickerBox = NULL;
+
+void initSizeGroups()
+{
+	sizeGroupLineNumbers = gtk_size_group_new (GTK_SIZE_GROUP_HORIZONTAL);
+	sizeGroupTimePickerBox = gtk_size_group_new (GTK_SIZE_GROUP_HORIZONTAL);
+}
+
+//int set(GtkWidget *mainTable)
 //{
-//	GList *children = gtk_container_get_children(GTK_CONTAINER(mainTable));
-//	while ((children = g_list_next(children)) != NULL)
+//	//call this method after adding a row
+//	int maxLineNumberDigits = countDigits(lineNumberGUI);
+//
+//	GList *lines = gtk_container_get_children(GTK_CONTAINER(mainTable));
+//	while (lines != NULL)
 //	{
-//		if (g_strcasecmp(gtk_widget_get_name(children->data), "GtkButton") == 0)
-//		{
-//			g_signal_connect(children->data, "clicked", G_CALLBACK(on_minute_pressed), NULL);
-//			printf("g_signal_connect\n");
-//		}
+//		GList *elements = gtk_container_get_children(GTK_CONTAINER(lines->data));
+//		// is always the first element
+//		GtkWidget *lineNumberLabel = elements->data;
+//		gtk_label_set_xalign (lineNumberLabel, 1.0);
+//		gtk_label_set_width_chars (lineNumberLabel,maxLineNumberDigits);
+//		lines = g_list_next(lines);
 //	}
 //}
+//gtk_widget_size_allocate ()
 
 GtkWidget* openGTKWindow(GtkBuilder *builder, GtkWidget *parent, char* windowName)
 {
@@ -45,6 +60,7 @@ void fillFragmentLineNumber(GtkLabel *lineNumberLabel)
 	gtk_label_set_text(lineNumberLabel,lineNumberStr);
 	free(lineNumberStr);
 	lineNumberGUI++;
+	gtk_size_group_add_widget (sizeGroupLineNumbers,lineNumberLabel);
 }
 
 void addComment(GtkWidget *mainTable, const char *comment)
@@ -82,6 +98,8 @@ void addSimpleCronJob(GtkWidget *mainTable, const char *simpleSelector, const ch
 	GtkWidget *fragment = GTK_WIDGET(gtk_builder_get_object(builder, "cronjob.simple"));
 	GtkWidget *commandBox = gtk_builder_get_object (builder,"simple_command");
 	gtk_entry_set_text(commandBox,command);
+	GtkWidget *timePickerBox = gtk_builder_get_object (builder,"simple_timePicker");
+	gtk_size_group_add_widget (sizeGroupTimePickerBox,timePickerBox);
 	GtkWidget *choiceBox = gtk_builder_get_object (builder,"simple_choice");
 	int i;
 	for( i = 0; i < SIMPLE_TIMING_VALUES_SIZE ;i++)
@@ -118,6 +136,8 @@ void addAdvancedCronJob(GtkWidget *mainTable, const char *minute, const char *ho
 	gtk_button_set_label (dowBox,dow);
 	GtkWidget *lineNumberLabel = gtk_builder_get_object (builder,"advanced_lineNumber");
 	fillFragmentLineNumber(lineNumberLabel);
+	GtkWidget *timePickerBox = gtk_builder_get_object (builder,"advanced_timePicker");
+	gtk_size_group_add_widget (sizeGroupTimePickerBox,timePickerBox);
 	gtk_builder_connect_signals(builder, NULL);
 	gtk_container_add(mainTable,fragment);
 	g_object_unref(builder);

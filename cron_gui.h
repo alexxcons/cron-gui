@@ -12,6 +12,10 @@ void addAdvancedCronJob(GtkWidget *mainTable, const char *minute, const char *ho
 void addComment(GtkWidget *mainTable, const char *comment);
 void addVariable(GtkWidget *mainTable, const char *text);
 
+int setLineNumberAlligmentRight(GtkWidget *mainTable);
+
+void initSizeGroups();
+
 // called when window is closed
 void on_main_window_destroy();
 
