@@ -165,19 +165,25 @@ void on_main_window_destroy()
     gtk_main_quit();
 }
 
-void on_minute_pressed(GtkWidget *button)
+void on_loadWizard_pressed(GtkWidget *button,int data )
 {
-	GtkCssProvider *cssProvider = gtk_css_provider_new ();
-	gtk_css_provider_load_from_path(cssProvider,"./test.css",NULL);
+	printf("data: %i",data);
+	GtkBuilder *builder = gtk_builder_new();
+	gtk_builder_add_from_file (builder, "minute_dialog.glade", NULL);
+    GtkWidget *window= GTK_WIDGET(gtk_builder_get_object(builder, "MinuteWizard"));
+    gtk_window_set_transient_for (window,main_window);
+    gtk_builder_connect_signals(builder, NULL);
+    gtk_widget_show(window);
+    g_object_unref(builder);
+}
+
+void on_minute_pressed(GtkWidget *button,int data)
+{
+	printf("data: %i",data);
 	GtkBuilder *builder = gtk_builder_new();
 	gtk_builder_add_from_file (builder, "minute_dialog.glade", NULL);
     GtkWidget       *window= GTK_WIDGET(gtk_builder_get_object(builder, "MinuteWizard"));
     gtk_window_set_transient_for (window,main_window);
-	//gtk_style_context_add_provider(gtk_widget_get_style_context(window),cssProvider,GTK_STYLE_PROVIDER_PRIORITY_USER);
-
-	gtk_style_context_add_provider_for_screen(gdk_screen_get_default(),
-	                                              GTK_STYLE_PROVIDER(cssProvider),
-	                                              GTK_STYLE_PROVIDER_PRIORITY_USER);
     gtk_builder_connect_signals(builder, NULL);
 
     gtk_widget_show(window);
@@ -186,20 +192,44 @@ void on_minute_pressed(GtkWidget *button)
 
 void on_hour_pressed(GtkWidget *button)
 {
-	printf("hour pressed\n");
+	GtkBuilder *builder = gtk_builder_new();
+	gtk_builder_add_from_file (builder, "hour_dialog.glade", NULL);
+    GtkWidget       *window= GTK_WIDGET(gtk_builder_get_object(builder, "HourWizard"));
+    gtk_window_set_transient_for (window,main_window);
+    gtk_builder_connect_signals(builder, NULL);
+    gtk_widget_show(window);
+    g_object_unref(builder);
 }
 
 void on_dom_pressed(GtkWidget *button)
 {
-	printf("dom pressed\n");
+	GtkBuilder *builder = gtk_builder_new();
+	gtk_builder_add_from_file (builder, "dom_dialog.glade", NULL);
+    GtkWidget       *window= GTK_WIDGET(gtk_builder_get_object(builder, "DomWizard"));
+    gtk_window_set_transient_for (window,main_window);
+    gtk_builder_connect_signals(builder, NULL);
+    gtk_widget_show(window);
+    g_object_unref(builder);
 }
 
 void on_month_pressed(GtkWidget *button)
 {
-	printf("month pressed\n");
+	GtkBuilder *builder = gtk_builder_new();
+	gtk_builder_add_from_file (builder, "month_dialog.glade", NULL);
+    GtkWidget       *window= GTK_WIDGET(gtk_builder_get_object(builder, "MonthWizard"));
+    gtk_window_set_transient_for (window,main_window);
+    gtk_builder_connect_signals(builder, NULL);
+    gtk_widget_show(window);
+    g_object_unref(builder);
 }
 
 void on_dow_pressed(GtkWidget *button)
 {
-	printf("dow pressed\n");
+	GtkBuilder *builder = gtk_builder_new();
+	gtk_builder_add_from_file (builder, "dow_dialog.glade", NULL);
+    GtkWidget       *window= GTK_WIDGET(gtk_builder_get_object(builder, "DowWizard"));
+    gtk_window_set_transient_for (window,main_window);
+    gtk_builder_connect_signals(builder, NULL);
+    gtk_widget_show(window);
+    g_object_unref(builder);
 }
