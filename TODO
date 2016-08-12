@@ -1,8 +1,10 @@
 				
-				
 Must Have:
+- write to file (save + save as)
+- load from file
+- remove a line
+- add new line
 - check that string -size is not exceeded
-- generate wizards in code ? (css ? )
 - make use of menu bar
 - application argument
 - root /no-root? / sudo ?
@@ -11,5 +13,8 @@ Must Have:
 
 Features:
 - One big comment box instead of many small ones
+- Tooltips
+- Multi Language
+- Wizard-GUI's: Möglichkeit Interval direkt zu tippen ( validieren + aktives Fenster Zeigt getippten Interval )
 
 				

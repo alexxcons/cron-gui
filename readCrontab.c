@@ -262,6 +262,7 @@ int stepsStarToString(bitstr_t* bitstr, unsigned int max, char* string)
 			char* temp = malloc( length + 1 );// one more for 0-terminator
 			snprintf( temp, length + 1, "%d", stepSize );
 			strcat(string,temp);
+			free(temp);
 			return TRUE;
 		}
 	}

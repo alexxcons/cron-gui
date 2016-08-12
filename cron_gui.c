@@ -1,4 +1,5 @@
 #include "cron_gui.h"
+#include "wizard.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -42,15 +43,6 @@ void initSizeGroups()
 //	}
 //}
 //gtk_widget_size_allocate ()
-
-GtkWidget* openGTKWindow(GtkBuilder *builder, GtkWidget *parent, char* windowName)
-{
-    GtkWidget *window = GTK_WIDGET(gtk_builder_get_object(builder, windowName));
-    if( parent != NULL )
-    	gtk_window_set_transient_for (window,parent);
-    gtk_widget_show(window);
-    return window;
-}
 
 void fillFragmentLineNumber(GtkLabel *lineNumberLabel)
 {
@@ -158,6 +150,22 @@ void addAdvancedCronJob(GtkWidget *mainTable, const char *minute, const char *ho
 //}
 
 
+void openWizardFromFile(char* fileName, char* wizardName)
+{
+	GtkBuilder *builder = gtk_builder_new();
+	gtk_builder_add_from_file (builder, fileName, NULL);
+    GtkWidget *widget= GTK_WIDGET(gtk_builder_get_object(builder, wizardName));
+    gtk_window_set_transient_for (GTK_WINDOW(widget),main_window);
+    gtk_builder_connect_signals(builder, NULL);
+    gtk_widget_show(widget);
+    g_object_unref(builder);
+}
+
+void on_insert_line_activate(GtkWidget *button)
+{
+	openWizardFromFile("newLine.glade","newLine");
+}
+
 // called when window is closed
 void on_main_window_destroy()
 {
@@ -165,71 +173,37 @@ void on_main_window_destroy()
     gtk_main_quit();
 }
 
-void on_loadWizard_pressed(GtkWidget *button,int data )
+void on_loadWizard_pressed(GtkWidget *button)
 {
-	printf("data: %i",data);
-	GtkBuilder *builder = gtk_builder_new();
-	gtk_builder_add_from_file (builder, "minute_dialog.glade", NULL);
-    GtkWidget *window= GTK_WIDGET(gtk_builder_get_object(builder, "MinuteWizard"));
-    gtk_window_set_transient_for (window,main_window);
-    gtk_builder_connect_signals(builder, NULL);
-    gtk_widget_show(window);
-    g_object_unref(builder);
+	//printf("data: %i",data);
 }
 
-void on_minute_pressed(GtkWidget *button,int data)
+void on_cancel_pressed(GtkWidget *button, GtkWidget *wizardWindow)
 {
-	printf("data: %i",data);
-	GtkBuilder *builder = gtk_builder_new();
-	gtk_builder_add_from_file (builder, "minute_dialog.glade", NULL);
-    GtkWidget       *window= GTK_WIDGET(gtk_builder_get_object(builder, "MinuteWizard"));
-    gtk_window_set_transient_for (window,main_window);
-    gtk_builder_connect_signals(builder, NULL);
+	gtk_widget_destroy(wizardWindow);
+}
 
-    gtk_widget_show(window);
-    g_object_unref(builder);
+void on_minute_pressed(GtkWidget *button)
+{
+	runWizard( MINUTE, main_window);
 }
 
 void on_hour_pressed(GtkWidget *button)
 {
-	GtkBuilder *builder = gtk_builder_new();
-	gtk_builder_add_from_file (builder, "hour_dialog.glade", NULL);
-    GtkWidget       *window= GTK_WIDGET(gtk_builder_get_object(builder, "HourWizard"));
-    gtk_window_set_transient_for (window,main_window);
-    gtk_builder_connect_signals(builder, NULL);
-    gtk_widget_show(window);
-    g_object_unref(builder);
+	runWizard( HOUR, main_window);
 }
 
 void on_dom_pressed(GtkWidget *button)
 {
-	GtkBuilder *builder = gtk_builder_new();
-	gtk_builder_add_from_file (builder, "dom_dialog.glade", NULL);
-    GtkWidget       *window= GTK_WIDGET(gtk_builder_get_object(builder, "DomWizard"));
-    gtk_window_set_transient_for (window,main_window);
-    gtk_builder_connect_signals(builder, NULL);
-    gtk_widget_show(window);
-    g_object_unref(builder);
+	runWizard( DOM, main_window);
 }
 
 void on_month_pressed(GtkWidget *button)
 {
-	GtkBuilder *builder = gtk_builder_new();
-	gtk_builder_add_from_file (builder, "month_dialog.glade", NULL);
-    GtkWidget       *window= GTK_WIDGET(gtk_builder_get_object(builder, "MonthWizard"));
-    gtk_window_set_transient_for (window,main_window);
-    gtk_builder_connect_signals(builder, NULL);
-    gtk_widget_show(window);
-    g_object_unref(builder);
+	runWizard( MONTH, main_window);
 }
 
 void on_dow_pressed(GtkWidget *button)
 {
-	GtkBuilder *builder = gtk_builder_new();
-	gtk_builder_add_from_file (builder, "dow_dialog.glade", NULL);
-    GtkWidget       *window= GTK_WIDGET(gtk_builder_get_object(builder, "DowWizard"));
-    gtk_window_set_transient_for (window,main_window);
-    gtk_builder_connect_signals(builder, NULL);
-    gtk_widget_show(window);
-    g_object_unref(builder);
+	runWizard( DOW, main_window);
 }
