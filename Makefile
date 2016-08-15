@@ -15,8 +15,8 @@ CFLAGS += -DDEBIAN=1
 
 #HEADERS = cron_gui.h readCrontab.h
 # files to work with:
-SOURCES = pkg-cron/entry.c pkg-cron/env.c pkg-cron/misc.c readCrontab.c cron_gui.c main.c
-SOURCES_TEST = 	pkg-cron/entry.c pkg-cron/env.c pkg-cron/misc.c readCrontab.c cron_gui.c test.c
+SOURCES = pkg-cron/entry.c pkg-cron/env.c pkg-cron/misc.c readCrontab.c wizard.c cron_gui.c main.c
+SOURCES_TEST = 	pkg-cron/entry.c pkg-cron/env.c pkg-cron/misc.c readCrontab.c wizard.c cron_gui.c test.c
 #OBJS = 	main.o entry.o 
 TARGET =	cron-gui
 
@@ -26,7 +26,7 @@ OBJS_TEST = $(SOURCES_TEST:%.c=%.o)
 
 # Link command to compile + build binary:
 link:	$(OBJS)
-	gcc -I. entry.o env.o misc.o readCrontab.o cron_gui.o main.o $(LINKER_FLAGS) -o $(TARGET) $(LIBS)
+	gcc -I. entry.o env.o misc.o readCrontab.o wizard.o cron_gui.o main.o $(LINKER_FLAGS) -o $(TARGET) $(LIBS)
 
 main.o: main.c
 	gcc $(CFLAGS) -DMAIN_PROGRAM=1 -c $<
@@ -48,4 +48,4 @@ clean:
 	rm -f $(OBJS) $(OBJS_TEST) $(TARGET) test
 	
 test: $(OBJS_TEST)
-	gcc entry.o env.o misc.o readCrontab.o cron_gui.o test.o $(LINKER_FLAGS) -o test $(LIBS)
+	gcc entry.o env.o misc.o readCrontab.o wizard.o cron_gui.o test.o $(LINKER_FLAGS) -o test $(LIBS)

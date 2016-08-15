@@ -26,24 +26,6 @@ void initSizeGroups()
 	sizeGroupTimePickerBox = gtk_size_group_new (GTK_SIZE_GROUP_HORIZONTAL);
 }
 
-//int set(GtkWidget *mainTable)
-//{
-//	//call this method after adding a row
-//	int maxLineNumberDigits = countDigits(lineNumberGUI);
-//
-//	GList *lines = gtk_container_get_children(GTK_CONTAINER(mainTable));
-//	while (lines != NULL)
-//	{
-//		GList *elements = gtk_container_get_children(GTK_CONTAINER(lines->data));
-//		// is always the first element
-//		GtkWidget *lineNumberLabel = elements->data;
-//		gtk_label_set_xalign (lineNumberLabel, 1.0);
-//		gtk_label_set_width_chars (lineNumberLabel,maxLineNumberDigits);
-//		lines = g_list_next(lines);
-//	}
-//}
-//gtk_widget_size_allocate ()
-
 void fillFragmentLineNumber(GtkLabel *lineNumberLabel)
 {
 	int length = snprintf( NULL, 0, "%d", lineNumberGUI );
@@ -65,7 +47,7 @@ void addComment(GtkWidget *mainTable, const char *comment)
 	GtkWidget *lineNumberLabel = gtk_builder_get_object (builder,"comment_lineNumber");
 	fillFragmentLineNumber(lineNumberLabel);
 	gtk_builder_connect_signals(builder, NULL);
-	gtk_container_add(mainTable,fragment);
+	gtk_container_add(GTK_CONTAINER(mainTable),fragment);
 	g_object_unref(builder);
 }
 
@@ -79,7 +61,7 @@ void addVariable(GtkWidget *mainTable, const char *text)
 	GtkWidget *lineNumberLabel = gtk_builder_get_object (builder,"variable_lineNumber");
 	fillFragmentLineNumber(lineNumberLabel);
 	gtk_builder_connect_signals(builder, NULL);
-	gtk_container_add(mainTable,fragment);
+	gtk_container_add(GTK_CONTAINER(mainTable),fragment);
 	g_object_unref(builder);
 }
 
@@ -105,7 +87,7 @@ void addSimpleCronJob(GtkWidget *mainTable, const char *simpleSelector, const ch
 	GtkWidget *lineNumberLabel = gtk_builder_get_object (builder,"simple_lineNumber");
 	fillFragmentLineNumber(lineNumberLabel);
 	gtk_builder_connect_signals(builder, NULL);
-	gtk_container_add(mainTable,fragment);
+	gtk_container_add(GTK_CONTAINER(mainTable),fragment);
 	g_object_unref(builder);
 }
 
@@ -131,24 +113,9 @@ void addAdvancedCronJob(GtkWidget *mainTable, const char *minute, const char *ho
 	GtkWidget *timePickerBox = gtk_builder_get_object (builder,"advanced_timePicker");
 	gtk_size_group_add_widget (sizeGroupTimePickerBox,timePickerBox);
 	gtk_builder_connect_signals(builder, NULL);
-	gtk_container_add(mainTable,fragment);
+	gtk_container_add(GTK_CONTAINER(mainTable),fragment);
 	g_object_unref(builder);
 }
-//void connectSignalsCronjobAdvanced(GtkWidget *cronjob)
-//{
-//	GList *children = gtk_container_get_children(GTK_CONTAINER(cronjob));
-//	printf("connectSignalsCronjobAdvanced\n");
-//	while ((children = g_list_next(children)) != NULL)
-//	{
-//		printf("%s\n",gtk_widget_get_name(children->data));
-//		if (g_strcasecmp(gtk_widget_get_name(children->data), "GtkButton") == 0)
-//		{
-//			g_signal_connect(children->data, "clicked", G_CALLBACK(on_minute_pressed), NULL);
-//			printf("g_signal_connect\n");
-//		}
-//	}
-//}
-
 
 void openWizardFromFile(char* fileName, char* wizardName)
 {
@@ -185,25 +152,25 @@ void on_cancel_pressed(GtkWidget *button, GtkWidget *wizardWindow)
 
 void on_minute_pressed(GtkWidget *button)
 {
-	runWizard( MINUTE, main_window);
+	runWizard( MINUTE, main_window, button);
 }
 
 void on_hour_pressed(GtkWidget *button)
 {
-	runWizard( HOUR, main_window);
+	runWizard( HOUR, main_window, button);
 }
 
 void on_dom_pressed(GtkWidget *button)
 {
-	runWizard( DOM, main_window);
+	runWizard( DOM, main_window, button);
 }
 
 void on_month_pressed(GtkWidget *button)
 {
-	runWizard( MONTH, main_window);
+	runWizard( MONTH, main_window, button);
 }
 
 void on_dow_pressed(GtkWidget *button)
 {
-	runWizard( DOW, main_window);
+	runWizard( DOW, main_window, button);
 }

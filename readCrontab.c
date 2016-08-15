@@ -100,7 +100,7 @@ int appendIf_AtWeekly(entry *e, char* string)
 			onlyFirstBitIsSet(e->hour,HOUR_COUNT) &&
 			allBitsSet(e->dom,DOM_COUNT) &&
 			allBitsSet(e->month,MONTH_COUNT) &&
-			bit_test(e->dow,0) && bit_test(e->dow,7) &&   // nasty **** in cron, sunday is always set twice
+			bit_test(e->dow,0) && bit_test(e->dow,7) &&   // nasty **** in cron: sunday is always set twice
 			(e->flags ^ DOM_STAR) == 0)
 	{
 		strcat(string,"@weekly");

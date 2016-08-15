@@ -4,15 +4,18 @@ Must Have:
 - load from file
 - remove a line
 - add new line
+- validate wizard-value when typed
+- validate whole file when wizard finished
 - check that string -size is not exceeded
-- make use of menu bar
+- make use of menu bar ( no glade-files any more )
 - application argument
 - root /no-root? / sudo ?
 - use automake
 - build patch for step-size stuff in crontab: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=830821
 
-Features:
+Planned Features:
 - One big comment box instead of many small ones
+- moving lines around ( as well comments ? )
 - Tooltips
 - Multi Language
 - Wizard-GUI's: Möglichkeit Interval direkt zu tippen ( validieren + aktives Fenster Zeigt getippten Interval )
