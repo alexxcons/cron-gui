@@ -1,8 +1,24 @@
+// Copyright 2016 Alexander Schwinn
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 #include <readCrontab.h>
 #include <stdio.h>
 
 static	int		CheckErrorCount = 0;
 static	char		Filename[MAX_FNAME];
+
 
 entry		*load_entry __P((FILE *, void (*)(),
 				 struct passwd *, char **));
@@ -420,18 +436,22 @@ void get_leading_comments(FILE *crontab, GtkWidget *mainTable)
 
 }
 
-int read_cron_tab(GtkWidget *mainTable)
+int read_cron_tab(GtkWidget *mainTable,char* fileToLoad)
 {
 	entry	*e;
 	int eof = FALSE;
 	char envstr[MAX_ENVSTR];
 	char	**envp = env_init();
 	static	struct passwd	pw;
-
-	FILE * crontab = fopen("crontab", "r");
+	if( verboseMode )
+	{
+		printf("Attempt to open file:\n");
+		printf("%s\n",fileToLoad);
+	}
+	FILE * crontab = fopen(fileToLoad, "r");
 	if (!crontab)
 	{
-		fprintf(stderr, "%s/: fopen: %s\n", "PutDirectoryHere", strerror(errno));
+		fprintf(stderr, "Failed to open file '%s' : %s\n", fileToLoad, strerror(errno));
 		return (-2);
 	}
 

@@ -1,14 +1,14 @@
 				
 Must Have:
 - write to file (save + save as)
-- load from file
 - remove a line
 - add new line
 - validate wizard-value when typed
 - validate whole file when wizard finished
 - check that string -size is not exceeded
 - make use of menu bar ( no glade-files any more )
-- application argument
+- application argument -h
+- bug: expand all job entries to same size ( sizegroup )
 - root /no-root? / sudo ?
 - use automake
 - build patch for step-size stuff in crontab: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=830821

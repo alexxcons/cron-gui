@@ -1,3 +1,18 @@
+// Copyright 2016 Alexander Schwinn
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 #include "cron_gui.h"
 #include "wizard.h"
 
@@ -45,7 +60,7 @@ void addComment(GtkWidget *mainTable, const char *comment)
 	GtkWidget *textbox = gtk_builder_get_object (builder,"comment_textbox");
 	gtk_entry_set_text(textbox,comment);
 	GtkWidget *lineNumberLabel = gtk_builder_get_object (builder,"comment_lineNumber");
-	fillFragmentLineNumber(lineNumberLabel);
+	fillFragmentLineNumber(GTK_LABEL(lineNumberLabel));
 	gtk_builder_connect_signals(builder, NULL);
 	gtk_container_add(GTK_CONTAINER(mainTable),fragment);
 	g_object_unref(builder);
@@ -59,7 +74,7 @@ void addVariable(GtkWidget *mainTable, const char *text)
 	GtkWidget *textbox = gtk_builder_get_object (builder,"variable_textbox");
 	gtk_entry_set_text(textbox,text);
 	GtkWidget *lineNumberLabel = gtk_builder_get_object (builder,"variable_lineNumber");
-	fillFragmentLineNumber(lineNumberLabel);
+	fillFragmentLineNumber(GTK_LABEL(lineNumberLabel));
 	gtk_builder_connect_signals(builder, NULL);
 	gtk_container_add(GTK_CONTAINER(mainTable),fragment);
 	g_object_unref(builder);
@@ -85,7 +100,7 @@ void addSimpleCronJob(GtkWidget *mainTable, const char *simpleSelector, const ch
 		}
 	}
 	GtkWidget *lineNumberLabel = gtk_builder_get_object (builder,"simple_lineNumber");
-	fillFragmentLineNumber(lineNumberLabel);
+	fillFragmentLineNumber(GTK_LABEL(lineNumberLabel));
 	gtk_builder_connect_signals(builder, NULL);
 	gtk_container_add(GTK_CONTAINER(mainTable),fragment);
 	g_object_unref(builder);
@@ -109,7 +124,7 @@ void addAdvancedCronJob(GtkWidget *mainTable, const char *minute, const char *ho
 	GtkWidget *dowBox = gtk_builder_get_object (builder,"advanced_dow");
 	gtk_button_set_label (dowBox,dow);
 	GtkWidget *lineNumberLabel = gtk_builder_get_object (builder,"advanced_lineNumber");
-	fillFragmentLineNumber(lineNumberLabel);
+	fillFragmentLineNumber(GTK_LABEL(lineNumberLabel));
 	GtkWidget *timePickerBox = gtk_builder_get_object (builder,"advanced_timePicker");
 	gtk_size_group_add_widget (sizeGroupTimePickerBox,timePickerBox);
 	gtk_builder_connect_signals(builder, NULL);
