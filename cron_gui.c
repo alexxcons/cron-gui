@@ -52,6 +52,43 @@ void fillFragmentLineNumber(GtkLabel *lineNumberLabel)
 	gtk_size_group_add_widget (sizeGroupLineNumbers,lineNumberLabel);
 }
 
+void activate_main_gui(GtkApplication *app, const char* fileToLoad)
+{
+	//	GtkCssProvider *cssProvider = gtk_css_provider_new ();
+	//	gtk_css_provider_load_from_path(cssProvider,"./test.css",NULL);
+	//	gtk_style_context_add_provider_for_screen(gdk_screen_get_default(),GTK_STYLE_PROVIDER(cssProvider),GTK_STYLE_PROVIDER_PRIORITY_USER);
+
+	GtkWidget *window = gtk_application_window_new(app);
+	g_signal_connect (window, "destroy", G_CALLBACK (on_main_window_destroy), NULL);
+	main_window = GTK_WINDOW(window);
+
+	//gtk_window_set_title (GTK_WINDOW (window), "Window");
+	gtk_window_set_default_size (GTK_WINDOW (window), 200, 200);
+
+	GtkWidget *main_box = gtk_box_new (GTK_ORIENTATION_VERTICAL,0);
+	gtk_container_add (GTK_CONTAINER (window), main_box);
+
+	GtkWidget *menuBar = gtk_menu_bar_new();
+	gtk_container_add (GTK_CONTAINER (main_box), menuBar);
+
+	GtkWidget *lines = gtk_box_new(GTK_ORIENTATION_VERTICAL,0);
+	gtk_container_add(GTK_CONTAINER (main_box), lines);
+
+	GtkWidget *statusBar = gtk_statusbar_new();
+
+	gtk_container_add (GTK_CONTAINER (main_box), statusBar);
+	gtk_widget_show_all (window);
+
+	initSizeGroups();
+
+	if( fileToLoad == NULL)
+		read_cron_tab(lines,"crontab");
+	else
+		read_cron_tab(lines,fileToLoad);
+
+	gtk_main();
+}
+
 void addComment(GtkWidget *mainTable, const char *comment)
 {
 	GtkBuilder *builder = gtk_builder_new();

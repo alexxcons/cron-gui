@@ -7,7 +7,6 @@ Must Have:
 - validate whole file when wizard finished
 - check that string -size is not exceeded
 - make use of menu bar ( no glade-files any more )
-- application argument -h
 - bug: expand all job entries to same size ( sizegroup )
 - root /no-root? / sudo ?
 - use automake

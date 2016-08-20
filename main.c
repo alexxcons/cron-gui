@@ -29,7 +29,15 @@ static void print_help(char* progName)
 	printf("\t-v: verbose - Prints additional console output\n");
 	printf("\t-l: load - Loads the passed crontab-file\n\n");
 
-	printf("Here you can find the source-code for this application: https://github.com/cron-job/cron-gui\n");
+	printf("AUTHOR\n");
+	printf("\tWritteb by Alexander Schwinn.\n\n");
+
+	printf("REPORT ERRORS\n");
+	printf("\tPlease use the bug report tools of your operating system to report bugs on this software\n\n");
+
+	printf("COPYRIGHT\n");
+	printf("\tCopyright  ©  2016 Alexander Schwinn Lizenz GPLv3+: GNU GPL Version 3 oder neuer <http://gnu.org/licenses/gpl.html>.\n");
+	printf("\tDies ist freie Software: Sie können sie verändern und weitergeben. Es gibt KEINE GARANTIE, soweit gesetzlich zulässig.\n");
 }
 
 static char* parse_arguments(int argc, char	*argv[])
@@ -57,33 +65,12 @@ static char* parse_arguments(int argc, char	*argv[])
 
 int main(int argc, char *argv[])
 {
-	char* fileToLoad = parse_arguments(argc, argv);
+	const char* fileToLoad = parse_arguments(argc, argv);
 
-    gtk_init(&argc, &argv);
-
-	// load css file
-//	GtkCssProvider *cssProvider = gtk_css_provider_new ();
-//	gtk_css_provider_load_from_path(cssProvider,"./test.css",NULL);
-//	gtk_style_context_add_provider_for_screen(gdk_screen_get_default(),GTK_STYLE_PROVIDER(cssProvider),GTK_STYLE_PROVIDER_PRIORITY_USER);
-
-	GtkBuilder *builder = gtk_builder_new();
-	gtk_builder_add_from_file (builder, "main_window.glade", NULL);
-
-	GtkWidget *window = GTK_WIDGET(gtk_builder_get_object(builder, "main_window"));
-    gtk_widget_show(window);
-    main_window = GTK_WINDOW(window);
-
-    GtkWidget *mainTable = gtk_builder_get_object (builder,"mainTable");
-    initSizeGroups();
-    if( fileToLoad == NULL)
-    	read_cron_tab(mainTable,"crontab");
-    else
-    	read_cron_tab(mainTable,fileToLoad);
-
-	gtk_builder_connect_signals(builder, NULL);
-
-    gtk_main();
-	g_object_unref(builder);
-    return 0;
+	GtkApplication *app = gtk_application_new ("org.gtk.cron-gui", G_APPLICATION_FLAGS_NONE);
+	g_signal_connect (app, "activate", G_CALLBACK (activate_main_gui), fileToLoad);
+	int status = g_application_run (G_APPLICATION (app), 0, NULL);
+	g_object_unref (app);
+	return status;
 }
 

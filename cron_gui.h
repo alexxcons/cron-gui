@@ -27,6 +27,8 @@ void addVariable(GtkWidget *mainTable, const char *text);
 
 void initSizeGroups();
 
+void activate_main_gui(GtkApplication *app, const char* fileToLoad );
+
 // called when window is closed
 void on_main_window_destroy();
 
