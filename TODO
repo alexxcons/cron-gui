@@ -7,13 +7,11 @@ Must Have:
 - validate whole file when wizard finished
 - check that string -size is not exceeded
 - make use of menu bar ( no glade-files any more )
-- bug: expand all job entries to same size ( sizegroup )
 - root /no-root? / sudo ?
 - use automake
 - build patch for step-size stuff in crontab: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=830821
 
 Planned Features:
-- One big comment box instead of many small ones
 - moving lines around ( as well comments ? )
 - Tooltips
 - Multi Language
