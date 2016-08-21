@@ -32,8 +32,11 @@ void activate_main_gui(GtkApplication *app, const char* fileToLoad );
 // called when window is closed
 void on_main_window_destroy();
 
-void on_insert_line_activate(GtkWidget *button);
-
 void on_time_selector_pressed(GtkWidget *button, wizardType type);
+
+void on_menu_add_comment(GtkWidget *menuItem, GtkWidget *mainTable );
+void on_menu_add_simple_job(GtkWidget *menuItem, GtkWidget *mainTable );
+void on_menu_add_advanced_job(GtkWidget *menuItem, GtkWidget *mainTable );
+
 
 #endif //CRON_GUI_H

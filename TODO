@@ -2,11 +2,9 @@
 Must Have:
 - write to file (save + save as)
 - remove a line
-- add new line
 - validate wizard-value when typed
 - validate whole file when wizard finished
 - check that string -size is not exceeded
-- make use of menu bar ( no glade-files any more )
 - root /no-root? / sudo ?
 - use automake
 - build patch for step-size stuff in crontab: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=830821

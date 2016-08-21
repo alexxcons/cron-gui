@@ -429,7 +429,7 @@ void get_leading_comments(FILE *crontab, GtkWidget *mainTable)
 		commentFound = get_comment(crontab,comment,MAX_ENVSTR);
 		if( commentFound )
 		{
-			addComment(mainTable,comment);
+			addCommentOrVariable(mainTable,comment);
 			printf("%s\n",comment );
 		}
 	}
@@ -476,7 +476,7 @@ int read_cron_tab(GtkWidget *mainTable,char* fileToLoad)
 				break;
 			case TRUE:
 				printf("environment var: %s\n",envstr );
-				addVariable(mainTable, envstr);
+				addCommentOrVariable(mainTable, envstr);
 				break;
 		}
 	}

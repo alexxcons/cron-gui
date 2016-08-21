@@ -74,6 +74,48 @@ void activate_main_gui(GtkApplication *app, const char* fileToLoad)
 	GtkWidget *lines = gtk_box_new(GTK_ORIENTATION_VERTICAL,0);
 	gtk_container_add(GTK_CONTAINER (main_box), lines);
 
+	GtkWidget *fileMenu = gtk_menu_new();
+	GtkWidget *fileBase = gtk_menu_item_new_with_label("File");
+	gtk_menu_item_set_submenu(GTK_MENU_ITEM(fileBase), fileMenu);
+	gtk_menu_shell_append(GTK_MENU_SHELL(menuBar), fileBase);
+	GtkWidget *fileNew = gtk_menu_item_new_with_label("New");
+	GtkWidget *fileOpen = gtk_menu_item_new_with_label("Open");
+	GtkWidget *fileSave = gtk_menu_item_new_with_label("Save");
+	GtkWidget *fileSaveAs = gtk_menu_item_new_with_label("Save as");
+	GtkWidget *fileClose = gtk_menu_item_new_with_label("Close");
+	gtk_menu_shell_append(GTK_MENU_SHELL(fileMenu), fileNew);
+	gtk_menu_shell_append(GTK_MENU_SHELL(fileMenu), fileOpen);
+	gtk_menu_shell_append(GTK_MENU_SHELL(fileMenu), fileSave);
+	gtk_menu_shell_append(GTK_MENU_SHELL(fileMenu), fileSaveAs);
+	gtk_menu_shell_append(GTK_MENU_SHELL(fileMenu), fileClose);
+
+	GtkWidget *editMenu = gtk_menu_new();
+	GtkWidget *editBase = gtk_menu_item_new_with_label("Edit");
+	gtk_menu_item_set_submenu(GTK_MENU_ITEM(editBase), editMenu);
+	gtk_menu_shell_append(GTK_MENU_SHELL(menuBar), editBase);
+	GtkWidget *editCopy = gtk_menu_item_new_with_label("Copy");
+	GtkWidget *editPaste = gtk_menu_item_new_with_label("Paste");
+	GtkWidget *editAddSimpleJob = gtk_menu_item_new_with_label("Add Simple Job");
+	GtkWidget *editAddAdvancedJob = gtk_menu_item_new_with_label("Add Advanced Job");
+	GtkWidget *editAddComment = gtk_menu_item_new_with_label("Add Comment/Variable");
+	gtk_menu_shell_append(GTK_MENU_SHELL(editMenu), editCopy);
+	gtk_menu_shell_append(GTK_MENU_SHELL(editMenu), editPaste);
+	gtk_menu_shell_append(GTK_MENU_SHELL(editMenu), editAddSimpleJob);
+	gtk_menu_shell_append(GTK_MENU_SHELL(editMenu), editAddAdvancedJob);
+	gtk_menu_shell_append(GTK_MENU_SHELL(editMenu), editAddComment);
+	g_signal_connect(G_OBJECT(editAddSimpleJob), "activate", G_CALLBACK(on_menu_add_simple_job), lines);
+	g_signal_connect(G_OBJECT(editAddAdvancedJob), "activate", G_CALLBACK(on_menu_add_advanced_job), lines);
+	g_signal_connect(G_OBJECT(editAddComment), "activate", G_CALLBACK(on_menu_add_comment), lines);
+
+	GtkWidget *helpMenu = gtk_menu_new();
+	GtkWidget *helpBase = gtk_menu_item_new_with_label("Help");
+	gtk_menu_item_set_submenu(GTK_MENU_ITEM(helpBase), helpMenu);
+	gtk_menu_shell_append(GTK_MENU_SHELL(menuBar), helpBase);
+	GtkWidget *helpIndex = gtk_menu_item_new_with_label("Index");
+	GtkWidget *helpAbout = gtk_menu_item_new_with_label("About");
+	gtk_menu_shell_append(GTK_MENU_SHELL(helpMenu), helpIndex);
+	gtk_menu_shell_append(GTK_MENU_SHELL(helpMenu), helpAbout);
+
 	GtkWidget *statusBar = gtk_statusbar_new();
 
 	gtk_container_add (GTK_CONTAINER (main_box), statusBar);
@@ -163,20 +205,19 @@ void addAdvancedCronJob(GtkWidget *mainTable, const char *minute, const char *ho
 	gtk_widget_show_all (box);
 }
 
-void openWizardFromFile(char* fileName, char* wizardName)
+void on_menu_add_comment(GtkWidget *menuItem, GtkWidget *mainTable )
 {
-	GtkBuilder *builder = gtk_builder_new();
-	gtk_builder_add_from_file (builder, fileName, NULL);
-    GtkWidget *widget= GTK_WIDGET(gtk_builder_get_object(builder, wizardName));
-    gtk_window_set_transient_for (GTK_WINDOW(widget),main_window);
-    gtk_builder_connect_signals(builder, NULL);
-    gtk_widget_show(widget);
-    g_object_unref(builder);
+	addCommentOrVariable(mainTable, "# Put comment here");
 }
 
-void on_insert_line_activate(GtkWidget *button)
+void on_menu_add_simple_job(GtkWidget *menuItem, GtkWidget *mainTable )
 {
-	openWizardFromFile("newLine.glade","newLine");
+	addSimpleCronJob(mainTable, simpleTimingValues[0], "command to execute");
+}
+
+void on_menu_add_advanced_job(GtkWidget *menuItem, GtkWidget *mainTable )
+{
+	addAdvancedCronJob( mainTable, "0", "0", "*", "*", "*", "command to execute");
 }
 
 void on_main_window_destroy()
