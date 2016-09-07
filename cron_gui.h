@@ -38,5 +38,20 @@ void on_menu_add_comment(GtkWidget *menuItem, GtkWidget *mainTable );
 void on_menu_add_simple_job(GtkWidget *menuItem, GtkWidget *mainTable );
 void on_menu_add_advanced_job(GtkWidget *menuItem, GtkWidget *mainTable );
 
+gboolean on_drag_motion(GtkWidget      *widget,
+        GdkDragContext *context,
+        gint            x,
+        gint            y,
+        guint           time,GtkWidget *box);
+void on_drag_data_received(GtkWidget        *widget,
+        GdkDragContext   *context,
+        gint              x,
+        gint              y,
+        GtkSelectionData *data,
+        guint             info,
+        guint             time,GtkWidget *box);
+void on_drag_data_get(GtkWidget *widget, GdkDragContext *context,GtkWidget *box);
 
+void on_drag_begin(GtkWidget *widget, GdkDragContext *context,GtkWidget *box);
+void on_drag_end(GtkWidget *widget, GdkDragContext *context,GtkWidget *box);
 #endif //CRON_GUI_H
