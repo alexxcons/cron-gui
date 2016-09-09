@@ -140,14 +140,17 @@ static GtkTargetEntry targetentries[] =
 {
   { "GtkBox",        0, TARGET_WHATEVER },
   { "STRING",        0, TARGET_WHATEVER },
+  { "ICON",        0, TARGET_WHATEVER },
 };
+
+const gint nTargetEntries = 3;
 
 void setDragDestination(GtkWidget *mainTable, GtkWidget *line)
 {
 gtk_drag_dest_set (line,
 		GTK_DEST_DEFAULT_MOTION,
 		targetentries,
-                   2,
+		nTargetEntries,
                    GDK_ACTION_MOVE);
 //g_signal_connect(line, "drag-data-received",G_CALLBACK(on_drag_data_received),line);
 g_signal_connect(line, "drag-motion",G_CALLBACK(on_drag_motion),mainTable);
@@ -210,8 +213,6 @@ void addTimeSelectorButton(GtkWidget *buttonBox, int type, const char* value )
 	  guint  flags;
 	  guint  info;
 	};
-	GtkTargetEntry targetEntry;
-	gtk_drag_source_set (button,GDK_BUTTON1_MASK,&targetEntry,2,GDK_ACTION_MOVE);
 
 	gtk_container_add (GTK_CONTAINER (buttonBox), button);
 	g_signal_connect (button, "clicked", G_CALLBACK (on_time_selector_pressed), type);
@@ -229,6 +230,7 @@ gboolean on_drag_motion(GtkWidget      *widget,
 		return FALSE;
 
 	printf("on_drag_motion: %s\n",gtk_widget_get_name (widget));
+
 	GtkWidget *destBox = NULL;
 	if( strcmp(gtk_widget_get_name (widget),"GtkEntry") == 0)
 	{
@@ -315,13 +317,19 @@ void addAdvancedCronJob(GtkWidget *mainTable, const char *minute, const char *ho
 	gtk_entry_set_text(commandBox,command);
 	gtk_widget_set_hexpand (commandBox,TRUE);
 
-	GtkWidget *button = gtk_button_new_with_label ("X");
-	//GtkWidget *button = commandBox;
-	g_signal_connect(button, "drag-begin",G_CALLBACK(on_drag_begin),box);
-	g_signal_connect(button, "drag-end",G_CALLBACK(on_drag_end),box);
-	g_signal_connect(button, "drag-data-get",G_CALLBACK(on_drag_data_get),box);
-	gtk_drag_source_set (button,GDK_BUTTON1_MASK,targetentries,2,GDK_ACTION_MOVE);
-	gtk_container_add (GTK_CONTAINER (box), button);
+	GtkWidget *dragButton = gtk_entry_new ();
+	gtk_entry_set_width_chars (dragButton,3);
+	gtk_entry_set_icon_from_icon_name (dragButton, GTK_ENTRY_ICON_SECONDARY,"view-app-grid-symbolic.symbolic");
+	GValue editable = G_VALUE_INIT;
+	g_value_init (&editable, G_TYPE_BOOLEAN	);
+	g_value_set_boolean (&editable,FALSE);
+	g_object_set_property(dragButton,"editable",&editable);
+	GtkTargetList * list = gtk_target_list_new (targetentries, nTargetEntries);
+	gtk_entry_set_icon_drag_source (dragButton, GTK_ENTRY_ICON_SECONDARY, list, GDK_ACTION_MOVE);
+	g_signal_connect(dragButton, "drag-begin",G_CALLBACK(on_drag_begin),box);
+	g_signal_connect(dragButton, "drag-end",G_CALLBACK(on_drag_end),box);
+	g_signal_connect(dragButton, "drag-data-get",G_CALLBACK(on_drag_data_get),box);
+	gtk_container_add (GTK_CONTAINER (box), dragButton);
 
 	gtk_widget_show_all (box);
 }
