@@ -21,6 +21,7 @@
 
 GtkWindow *main_window;
 
+GtkWidget* addDragDropButton(GtkWidget *box, GtkWidget *mainTable );
 void addSimpleCronJob(GtkWidget *mainTable, const char *simpleSelector, const char *command);
 void addAdvancedCronJob(GtkWidget *mainTable, const char *minute, const char *hour, const char *dom, const char *month, const char *dow, const char *command);
 void addCommentOrVariable(GtkWidget *mainTable, const char *text);
@@ -38,6 +39,12 @@ void on_menu_add_comment(GtkWidget *menuItem, GtkWidget *mainTable );
 void on_menu_add_simple_job(GtkWidget *menuItem, GtkWidget *mainTable );
 void on_menu_add_advanced_job(GtkWidget *menuItem, GtkWidget *mainTable );
 
+gboolean on_drag_drop (GtkWidget      *widget,
+               GdkDragContext *context,
+               gint            x,
+               gint            y,
+               guint           time,
+               GtkWidget *mainTable);
 gboolean on_drag_motion(GtkWidget      *widget,
         GdkDragContext *context,
         gint            x,

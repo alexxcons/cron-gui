@@ -1,10 +1,11 @@
 				
 Must Have:
 - write to file (save + save as)
+- correct window-size on start
 - remove a line
 - validate wizard-value when typed
 - validate whole file when wizard finished
-- check that string -size is not exceeded
+- check that string-size is not exceeded
 - root /no-root? / sudo ?
 - use automake
 - build patch for step-size stuff in crontab: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=830821
