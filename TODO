@@ -2,7 +2,6 @@
 Must Have:
 - write to file (save + save as)
 - correct window-size on start
-- remove a line
 - validate wizard-value when typed
 - validate whole file when wizard finished
 - check that string-size is not exceeded
@@ -11,7 +10,6 @@ Must Have:
 - build patch for step-size stuff in crontab: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=830821
 
 Planned Features:
-- moving lines around ( as well comments ? )
 - Tooltips
 - Multi Language
 - Wizard-GUI's: Möglichkeit Interval direkt zu tippen ( validieren + aktives Fenster Zeigt getippten Interval )

@@ -20,8 +20,6 @@
 #include <string.h>
 #include <math.h>
 
-static int lineNumberGUI = 1;
-
 const char * simpleTimingValues[] = {
     "@reboot",
     "@yearly",
@@ -41,16 +39,12 @@ void initSizeGroups()
 	sizeGroupTimePickerBox = gtk_size_group_new (GTK_SIZE_GROUP_HORIZONTAL);
 }
 
-void addLineNumber(GtkWidget *lineBox)
+void addLineNumber(GtkWidget *mainTable,GtkWidget *lineBox)
 {
-	int length = snprintf( NULL, 0, "%d", lineNumberGUI );
-	char* lineNumberStr = malloc( length + 1 );
-	snprintf( lineNumberStr, length + 1, "%d", lineNumberGUI );
-	GtkWidget *lineNumberLabel = gtk_label_new (lineNumberStr);
+	GtkWidget *lineNumberLabel = gtk_label_new ("");
 	gtk_container_add (GTK_CONTAINER (lineBox), lineNumberLabel);
-	free(lineNumberStr);
-	lineNumberGUI++;
 	gtk_size_group_add_widget (sizeGroupLineNumbers,lineNumberLabel);
+	fixLineNumbers(mainTable);
 }
 
 void activate_main_gui(GtkApplication *app, const char* fileToLoad)
@@ -174,7 +168,7 @@ void addCommentOrVariable(GtkWidget *mainTable, const char *text)
 	setDragDestination(mainTable, box);
 	gtk_container_add (GTK_CONTAINER (mainTable), box);
 
-	addLineNumber(box);
+	addLineNumber(mainTable,box);
 
 	GtkWidget *textbox = gtk_entry_new ();
 	setDragDestination(mainTable, textbox);
@@ -194,7 +188,7 @@ void addSimpleCronJob(GtkWidget *mainTable, const char *simpleSelector, const ch
 	gtk_container_add (GTK_CONTAINER (mainTable), box);
 	setDragDestination(mainTable, box);
 
-	addLineNumber(box);
+	addLineNumber(mainTable,box);
 
 	GtkWidget *timePicker = gtk_combo_box_text_new ();
 	gtk_container_add (GTK_CONTAINER (box), timePicker);
@@ -227,11 +221,12 @@ gboolean on_drag_drop (GtkWidget      *widget,
                guint           time,
                GtkWidget *mainTable)
 {
-	printf("on_drag_drop: %s\n",gtk_widget_get_name (widget));
+	//printf("on_drag_drop: %s\n",gtk_widget_get_name (widget));
 	if( strcmp(gtk_widget_get_name (widget),"trash") == 0 && dragSource != NULL)
 	{
 		gtk_drag_finish(context,TRUE,FALSE,time);
 		gtk_container_remove (GTK_CONTAINER(mainTable), dragSource);
+		fixLineNumbers(mainTable);
 		return TRUE;
 	}
 
@@ -240,6 +235,24 @@ gboolean on_drag_drop (GtkWidget      *widget,
 	gtk_drag_finish(context,FALSE,FALSE,time);
 	dragSource = NULL;
 	return TRUE;
+}
+
+void fixLineNumbers(GtkWidget *mainTable)
+{
+	GList *lines = gtk_container_get_children(GTK_CONTAINER(mainTable));
+	int lineNumber = 0;
+	for( GList *line = lines; line != NULL; line = g_list_next(line) )
+	{
+		lineNumber++;
+		GList *firstEntry = gtk_container_get_children(GTK_CONTAINER(line->data));
+		GtkLabel* label = GTK_LABEL(firstEntry->data); // first child
+
+		int length = snprintf( NULL, 0, "%d", lineNumber );
+		char* lineNumberStr = malloc( length + 1 );
+		snprintf( lineNumberStr, length + 1, "%d", lineNumber );
+		gtk_label_set_text(label,lineNumberStr);
+		free(lineNumberStr);
+	}
 }
 
 gboolean on_drag_motion(GtkWidget      *widget,
@@ -251,7 +264,7 @@ gboolean on_drag_motion(GtkWidget      *widget,
 	if(dragSource == NULL)
 		return FALSE;
 
-	printf("on_drag_motion: %s\n",gtk_widget_get_name (widget));
+	//printf("on_drag_motion: %s\n",gtk_widget_get_name (widget));
 
 	GtkWidget *destBox = NULL;
 	if( strcmp(gtk_widget_get_name (widget),"GtkEntry") == 0)
@@ -267,35 +280,39 @@ gboolean on_drag_motion(GtkWidget      *widget,
 		return FALSE;
 	}
 
+	if( dragSource == destBox )
+		return FALSE;
+
 	GValue destIndex = G_VALUE_INIT;
 	g_value_init (&destIndex, G_TYPE_INT);
 	gtk_container_child_get_property(GTK_CONTAINER(mainTable),destBox,"position",&destIndex);
 	if( g_value_get_int(&destIndex) < 0 )
 		return FALSE;
 	gtk_box_reorder_child (GTK_BOX(mainTable),dragSource,g_value_get_int(&destIndex));
+	fixLineNumbers(mainTable);
 	return TRUE;
 }
 
 
-void on_drag_data_received(GtkWidget        *widget,
-        GdkDragContext   *context,
-        gint              x,
-        gint              y,
-        GtkSelectionData *data,
-        guint             info,
-        guint             time,GtkWidget *box)
-{
-	printf("on_drag_data_received\n");
-}
-
-void on_drag_data_get(GtkWidget *widget, GdkDragContext *context,GtkWidget *box)
-{
-	printf("on_drag_data_get\n");
-}
+//void on_drag_data_received(GtkWidget        *widget,
+//        GdkDragContext   *context,
+//        gint              x,
+//        gint              y,
+//        GtkSelectionData *data,
+//        guint             info,
+//        guint             time,GtkWidget *box)
+//{
+//	printf("on_drag_data_received\n");
+//}
+//
+//void on_drag_data_get(GtkWidget *widget, GdkDragContext *context,GtkWidget *box)
+//{
+//	printf("on_drag_data_get\n");
+//}
 
 void on_drag_end(GtkWidget *widget, GdkDragContext *context,GtkWidget *mainTable)
 {
-	printf("on_drag_end: %s\n",gtk_widget_get_name (widget));
+	//printf("on_drag_end: %s\n",gtk_widget_get_name (widget));
 	if(dragSource)
 		gtk_drag_unhighlight (dragSource);
 	dragSource = NULL;
@@ -305,7 +322,7 @@ void on_drag_begin(GtkWidget *widget, GdkDragContext *context,GtkWidget *box)
 {
 	dragSource = box;
 	gtk_drag_dest_unset (box); //drag-source has to differ from drag-dest
-	printf("on_drag_begin\n");
+	//printf("on_drag_begin\n");
 	gtk_drag_highlight (box);
 	//gtk_container_remove(GTK_CONTAINER(box),widget);
 	//gtk_drag_set_icon_widget ( context, widget, 1, 1);
@@ -321,6 +338,7 @@ void addTimeSelectorButton(GtkWidget *buttonBox, int type, const char* value )
 GtkWidget* addDragDropButton(GtkWidget *box, GtkWidget *mainTable )
 {
 	GtkWidget *dragButton = gtk_entry_new ();
+	setDragDestination(mainTable, dragButton);
 	gtk_entry_set_width_chars (GTK_ENTRY(dragButton),3);
 	gtk_entry_set_icon_from_icon_name (GTK_ENTRY(dragButton), GTK_ENTRY_ICON_SECONDARY,"view-app-grid-symbolic.symbolic");
 	GValue editable = G_VALUE_INIT;
@@ -342,7 +360,7 @@ void addAdvancedCronJob(GtkWidget *mainTable, const char *minute, const char *ho
 	gtk_container_add (GTK_CONTAINER (mainTable), box);
 	setDragDestination(mainTable, box);
 
-	addLineNumber(box);
+	addLineNumber(mainTable,box);
 
 	GtkWidget *buttons = gtk_box_new (GTK_ORIENTATION_HORIZONTAL,0);
 	gtk_container_add (GTK_CONTAINER (box), buttons);

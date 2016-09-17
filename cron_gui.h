@@ -21,6 +21,8 @@
 
 GtkWindow *main_window;
 
+void fixLineNumbers(GtkWidget *mainTable);
+
 GtkWidget* addDragDropButton(GtkWidget *box, GtkWidget *mainTable );
 void addSimpleCronJob(GtkWidget *mainTable, const char *simpleSelector, const char *command);
 void addAdvancedCronJob(GtkWidget *mainTable, const char *minute, const char *hour, const char *dom, const char *month, const char *dow, const char *command);
