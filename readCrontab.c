@@ -436,7 +436,7 @@ void get_leading_comments(FILE *crontab, GtkWidget *mainTable)
 
 }
 
-int read_cron_tab(GtkWidget *mainTable,char* fileToLoad)
+int read_cron_tab(GtkWidget *mainTable,const char* fileToLoad)
 {
 	entry	*e;
 	int eof = FALSE;

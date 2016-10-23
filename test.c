@@ -32,6 +32,41 @@ void assertStrEq(char* expected ,char* got)
 	}
 }
 
+void assertIntEq(int expected, int got)
+{
+	if( expected != got )
+	{
+		printf("Test for line %d failed: \n",LineNumber );
+		printf("Expected int: %i \n",expected );
+		printf("Got int: %i \n",got );
+		exit(1);
+	}
+}
+
+int testTools()
+{
+	char* string = malloc(10 * sizeof(*string));
+	strcpy(string,"firstEntry");
+	assertIntEq(strlen(string),10);
+	string = expandString(string, " ");
+	assertIntEq(strlen(string),11);
+	string = expandString(string, "secondEntry");
+	assertIntEq(strlen(string),22);
+	assertStrEq(string,"firstEntry secondEntry");
+	//printf("%s \n",string );
+	//printf("%i \n",strlen(string) );
+
+	char* empty = NULL;
+	empty = expandString(empty, "# Edit this file to introduce tasks to be run by cron.");
+	empty = expandString(empty, "\n");
+	empty = expandString(empty, "#");
+	empty = expandString(empty, "\n");
+	empty = expandString(empty, "        # Each task to run has to be defined through a single line");
+	empty = expandString(empty, "\n");
+	assertStrEq("# Edit this file to introduce tasks to be run by cron.\n#\n        # Each task to run has to be defined through a single line\n",empty);
+}
+
+
 int testCrontab()
 {
 	entry	*e;
@@ -165,7 +200,7 @@ int testCrontab()
 int main(int argc, char *argv[])
 {
 	testCrontab();
-
+	testTools();
 
 	printf("All tests passed !\n");
 	return 0;

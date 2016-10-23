@@ -15,10 +15,13 @@
 
 #include "cron_gui.h"
 #include "wizard.h"
+#include <readCrontab.h>
+#include <writeCrontab.h>
 
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include <stdlib.h>
 
 const char * simpleTimingValues[] = {
     "@reboot",
@@ -28,10 +31,67 @@ const char * simpleTimingValues[] = {
     "@daily",
     "@hourly"
 };
+
+enum
+{
+  TARGET_WHATEVER,
+};
+
+static GtkTargetEntry targetentries[] =
+{
+  { "GtkBox",        0, TARGET_WHATEVER },
+  { "STRING",        0, TARGET_WHATEVER },
+  { "GtkImage",        0, TARGET_WHATEVER },
+};
+
+const gint nTargetEntries = 3;
+
 const int SIMPLE_TIMING_VALUES_SIZE	= 6;
 
 static GtkSizeGroup * sizeGroupLineNumbers = NULL;
 static GtkSizeGroup * sizeGroupTimePickerBox = NULL;
+
+const char* commentOrVariableFragmentName	= "commentOrVariable";
+const char* simpleJobFragmentName			= "simpleJob";
+const char* advancedJobFragmentName			= "advancedJob";
+
+char* expandString(char *string, const char *stringToAdd)
+{
+	if( stringToAdd == NULL )
+	{
+		return string;
+	}
+    const size_t sizeToAdd = strlen(stringToAdd);
+	if( sizeToAdd == 0 )
+	{
+		return string;
+	}
+    char *newBuffer = NULL;
+    if( string == NULL)
+    {
+    	newBuffer = malloc( ( sizeToAdd + 1)  * sizeof(*stringToAdd) );// + 1 for \0
+        //printf("malloc\n");
+    	newBuffer[0] = 0; // need to erase crap in first element, since we wanmt to strcat later
+    }
+    else
+    {
+    	const size_t sizeOld = strlen(string);
+        const size_t sizeNew = sizeOld + sizeToAdd;
+        //printf("sizeOld: %i\n",sizeOld);
+        //printf("sizeNew: %i\n",sizeNew);
+    	newBuffer = realloc( string, (sizeNew + 1)  * sizeof(*stringToAdd) );// + 1 for \0
+        //printf("realloc\n");
+    }
+
+    if ( newBuffer == NULL )
+    {
+        printf("Unexpected null pointer when malloc/realloc.\n");
+        exit(ERROR_EXIT);
+    }
+	strcat(newBuffer,stringToAdd);
+    //printf("%s",newBuffer);
+    return newBuffer;
+}
 
 void initSizeGroups()
 {
@@ -45,6 +105,14 @@ void addLineNumber(GtkWidget *mainTable,GtkWidget *lineBox)
 	gtk_container_add (GTK_CONTAINER (lineBox), lineNumberLabel);
 	gtk_size_group_add_widget (sizeGroupLineNumbers,lineNumberLabel);
 	fixLineNumbers(mainTable);
+}
+
+void setDragDestination(GtkWidget *mainTable, GtkWidget *widget)
+{
+	gtk_drag_dest_set (widget, GTK_DEST_DEFAULT_MOTION, targetentries, nTargetEntries, GDK_ACTION_MOVE);
+	//g_signal_connect(widget, "drag-data-received",G_CALLBACK(on_drag_data_received),widget);
+	g_signal_connect(widget, "drag-motion",G_CALLBACK(on_drag_motion),mainTable);
+	g_signal_connect(widget, "drag-drop",G_CALLBACK(on_drag_drop),mainTable);
 }
 
 void activate_main_gui(GtkApplication *app, const char* fileToLoad)
@@ -82,6 +150,11 @@ void activate_main_gui(GtkApplication *app, const char* fileToLoad)
 	gtk_menu_shell_append(GTK_MENU_SHELL(fileMenu), fileSave);
 	gtk_menu_shell_append(GTK_MENU_SHELL(fileMenu), fileSaveAs);
 	gtk_menu_shell_append(GTK_MENU_SHELL(fileMenu), fileClose);
+	g_signal_connect(G_OBJECT(fileNew), "activate", G_CALLBACK(on_menu_new), lines);
+	g_signal_connect(G_OBJECT(fileOpen), "activate", G_CALLBACK(on_menu_open), lines);
+	g_signal_connect(G_OBJECT(fileSave), "activate", G_CALLBACK(on_menu_save), lines);
+	g_signal_connect(G_OBJECT(fileSaveAs), "activate", G_CALLBACK(on_menu_save_as), lines);
+	g_signal_connect(G_OBJECT(fileClose), "activate", G_CALLBACK(on_menu_close), lines);
 
 	GtkWidget *editMenu = gtk_menu_new();
 	GtkWidget *editBase = gtk_menu_item_new_with_label("Edit");
@@ -97,6 +170,8 @@ void activate_main_gui(GtkApplication *app, const char* fileToLoad)
 	gtk_menu_shell_append(GTK_MENU_SHELL(editMenu), editAddSimpleJob);
 	gtk_menu_shell_append(GTK_MENU_SHELL(editMenu), editAddAdvancedJob);
 	gtk_menu_shell_append(GTK_MENU_SHELL(editMenu), editAddComment);
+	g_signal_connect(G_OBJECT(editCopy), "activate", G_CALLBACK(on_menu_copy), lines);
+	g_signal_connect(G_OBJECT(editPaste), "activate", G_CALLBACK(on_menu_paste), lines);
 	g_signal_connect(G_OBJECT(editAddSimpleJob), "activate", G_CALLBACK(on_menu_add_simple_job), lines);
 	g_signal_connect(G_OBJECT(editAddAdvancedJob), "activate", G_CALLBACK(on_menu_add_advanced_job), lines);
 	g_signal_connect(G_OBJECT(editAddComment), "activate", G_CALLBACK(on_menu_add_comment), lines);
@@ -109,6 +184,8 @@ void activate_main_gui(GtkApplication *app, const char* fileToLoad)
 	GtkWidget *helpAbout = gtk_menu_item_new_with_label("About");
 	gtk_menu_shell_append(GTK_MENU_SHELL(helpMenu), helpIndex);
 	gtk_menu_shell_append(GTK_MENU_SHELL(helpMenu), helpAbout);
+	g_signal_connect(G_OBJECT(helpIndex), "activate", G_CALLBACK(on_menu_index), lines);
+	g_signal_connect(G_OBJECT(helpAbout), "activate", G_CALLBACK(on_menu_about), lines);
 
 	GtkWidget *toolbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL,3);
 	gtk_container_add (GTK_CONTAINER (main_box), toolbox);
@@ -140,51 +217,41 @@ void activate_main_gui(GtkApplication *app, const char* fileToLoad)
 	gtk_main();
 }
 
-enum
-{
-  TARGET_WHATEVER,
-};
-
-static GtkTargetEntry targetentries[] =
-{
-  { "GtkBox",        0, TARGET_WHATEVER },
-  { "STRING",        0, TARGET_WHATEVER },
-  { "GtkImage",        0, TARGET_WHATEVER },
-};
-
-const gint nTargetEntries = 3;
-
-void setDragDestination(GtkWidget *mainTable, GtkWidget *widget)
-{
-	gtk_drag_dest_set (widget, GTK_DEST_DEFAULT_MOTION, targetentries, nTargetEntries, GDK_ACTION_MOVE);
-	//g_signal_connect(widget, "drag-data-received",G_CALLBACK(on_drag_data_received),widget);
-	g_signal_connect(widget, "drag-motion",G_CALLBACK(on_drag_motion),mainTable);
-	g_signal_connect(widget, "drag-drop",G_CALLBACK(on_drag_drop),mainTable);
-}
-
 void addCommentOrVariable(GtkWidget *mainTable, const char *text)
 {
 	GtkWidget *box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL,0);
+	gtk_widget_set_name (box,commentOrVariableFragmentName);
 	setDragDestination(mainTable, box);
 	gtk_container_add (GTK_CONTAINER (mainTable), box);
 
 	addLineNumber(mainTable,box);
 
-	GtkWidget *textbox = gtk_entry_new ();
+	GtkWidget *textbox = gtk_entry_new();
 	setDragDestination(mainTable, textbox);
 	gtk_container_add (GTK_CONTAINER (box), textbox);
-	gtk_entry_set_text(textbox,text);
-	gtk_entry_set_has_frame (textbox,FALSE);
+	gtk_entry_set_text(GTK_ENTRY(textbox),text);
+	gtk_entry_set_has_frame (GTK_ENTRY(textbox),FALSE);
 	gtk_widget_set_hexpand (textbox,TRUE);
 
 	GtkWidget *dragButton = addDragDropButton(box,mainTable);
-	gtk_entry_set_has_frame (dragButton,FALSE);
+	gtk_entry_set_has_frame (GTK_ENTRY(dragButton),FALSE);
 	gtk_widget_show_all (box);
+}
+
+char* commentOrVariableToString(GtkWidget *commentOrVariable, char* string)
+{
+	GList *element_lineNumber = gtk_container_get_children(GTK_CONTAINER(commentOrVariable));
+	GList *element_textBox = g_list_next(element_lineNumber);
+	GtkWidget* textbox =  element_textBox->data;
+	string = expandString(string,gtk_entry_get_text(GTK_ENTRY(textbox)));
+	string = expandString(string,"\n");
+	return string;
 }
 
 void addSimpleCronJob(GtkWidget *mainTable, const char *simpleSelector, const char *command)
 {
 	GtkWidget *box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL,0);
+	gtk_widget_set_name (box,simpleJobFragmentName);
 	gtk_container_add (GTK_CONTAINER (mainTable), box);
 	setDragDestination(mainTable, box);
 
@@ -196,20 +263,34 @@ void addSimpleCronJob(GtkWidget *mainTable, const char *simpleSelector, const ch
 	int i;
 	for( i = 0; i < SIMPLE_TIMING_VALUES_SIZE ;i++)
 	{
-		gtk_combo_box_text_append_text(timePicker,simpleTimingValues[i]);
+		gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(timePicker),simpleTimingValues[i]);
 		if(strcmp(simpleTimingValues[i],simpleSelector) == 0)
 		{
-			gtk_combo_box_set_active (timePicker,i);
+			gtk_combo_box_set_active (GTK_COMBO_BOX(timePicker),i);
 		}
 	}
 
 	GtkWidget *commandBox = gtk_entry_new();
 	gtk_container_add (GTK_CONTAINER (box), commandBox);
 	setDragDestination(mainTable, commandBox);
-	gtk_entry_set_text(commandBox,command);
+	gtk_entry_set_text(GTK_ENTRY(commandBox),command);
 	gtk_widget_set_hexpand (commandBox,TRUE);
 	addDragDropButton(box,mainTable);
 	gtk_widget_show_all (box);
+}
+
+char* simpleCronJobToString(GtkWidget *simpleCronJob, char* string)
+{
+	GList *element_lineNumber = gtk_container_get_children(GTK_CONTAINER(simpleCronJob));
+	GList *element_timePicker = g_list_next(element_lineNumber);
+	GList *element_command = g_list_next(element_timePicker);
+	GtkWidget* timePicker =  element_timePicker->data;
+	GtkWidget* command =  element_command->data;
+	string = expandString(string,gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(timePicker)));
+	string = expandString(string," ");
+	string = expandString(string,gtk_entry_get_text(GTK_ENTRY(command)));
+	string = expandString(string,"\n");
+	return string;
 }
 
 GtkWidget *dragSource = NULL;
@@ -357,6 +438,7 @@ GtkWidget* addDragDropButton(GtkWidget *box, GtkWidget *mainTable )
 void addAdvancedCronJob(GtkWidget *mainTable, const char *minute, const char *hour, const char *dom, const char *month, const char *dow, const char *command)
 {
 	GtkWidget *box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL,0);
+	gtk_widget_set_name (box,advancedJobFragmentName);
 	gtk_container_add (GTK_CONTAINER (mainTable), box);
 	setDragDestination(mainTable, box);
 
@@ -382,6 +464,76 @@ void addAdvancedCronJob(GtkWidget *mainTable, const char *minute, const char *ho
 	gtk_widget_show_all (box);
 }
 
+char* advancedCronJobToString(GtkWidget *advancedCronJob, char* string)
+{
+	GList *element_lineNumber = gtk_container_get_children(GTK_CONTAINER(advancedCronJob));
+	GList *element_buttons = g_list_next(element_lineNumber);
+	GtkWidget* timeSelector;
+	GList *element_minute = gtk_container_get_children(GTK_CONTAINER(element_buttons->data));
+	timeSelector =  element_minute->data;
+	string = expandString(string,gtk_button_get_label(GTK_BUTTON(timeSelector)));
+	string = expandString(string," ");
+	GList *element_hour = g_list_next(element_minute);
+	timeSelector =  element_hour->data;
+	string = expandString(string,gtk_button_get_label(GTK_BUTTON(timeSelector)));
+	string = expandString(string," ");
+	GList *element_dom = g_list_next(element_hour);
+	timeSelector =  element_dom->data;
+	string = expandString(string,gtk_button_get_label(GTK_BUTTON(timeSelector)));
+	string = expandString(string," ");
+	GList *element_month = g_list_next(element_dom);
+	timeSelector =  element_month->data;
+	string = expandString(string,gtk_button_get_label(GTK_BUTTON(timeSelector)));
+	string = expandString(string," ");
+	GList *element_dow = g_list_next(element_month);
+	timeSelector =  element_dow->data;
+	string = expandString(string,gtk_button_get_label(GTK_BUTTON(timeSelector)));
+	string = expandString(string," ");
+
+	GList *element_command = g_list_next(element_buttons);
+	GtkWidget* command =  element_command->data;
+	string = expandString(string,gtk_entry_get_text(GTK_ENTRY(command)));
+	string = expandString(string,"\n");
+	return string;
+}
+
+void on_menu_new(GtkWidget *menuItem, GtkWidget *mainTable )
+{
+	printf("TODO: new pressed\n");
+}
+
+void on_menu_open(GtkWidget *menuItem, GtkWidget *mainTable )
+{
+	printf("TODO: open pressed\n");
+}
+
+void on_menu_save(GtkWidget *menuItem, GtkWidget *mainTable )
+{
+	char* string = mainTableToString(mainTable);
+	printf("%s",string);
+	write_cron_tab("testfile.txt",string);
+}
+
+void on_menu_save_as(GtkWidget *menuItem, GtkWidget *mainTable )
+{
+	printf("TODO: save as pressed\n");
+}
+
+void on_menu_close(GtkWidget *menuItem, GtkWidget *mainTable )
+{
+	printf("TODO: close pressed\n");
+}
+
+void on_menu_copy(GtkWidget *menuItem, GtkWidget *mainTable )
+{
+	printf("TODO: copy pressed\n");
+}
+
+void on_menu_paste(GtkWidget *menuItem, GtkWidget *mainTable )
+{
+	printf("TODO: paste pressed\n");
+}
+
 void on_menu_add_comment(GtkWidget *menuItem, GtkWidget *mainTable )
 {
 	addCommentOrVariable(mainTable, "# Put comment here");
@@ -397,6 +549,16 @@ void on_menu_add_advanced_job(GtkWidget *menuItem, GtkWidget *mainTable )
 	addAdvancedCronJob( mainTable, "0", "0", "*", "*", "*", "command to execute");
 }
 
+void on_menu_index(GtkWidget *menuItem, GtkWidget *mainTable )
+{
+	printf("TODO: index pressed\n");
+}
+
+void on_menu_about(GtkWidget *menuItem, GtkWidget *mainTable )
+{
+	printf("TODO: about pressed\n");
+}
+
 void on_main_window_destroy()
 {
     gtk_main_quit();
@@ -406,4 +568,32 @@ void on_time_selector_pressed(GtkWidget *button, wizardType type)
 {
 	runWizard( type, main_window, button);
 	//printf("data: %i",data);
+}
+
+char* mainTableToString(GtkWidget *mainTable)
+{
+	char* string = NULL;
+	GList *lines = gtk_container_get_children(GTK_CONTAINER(mainTable));
+	for( GList *line = lines; line != NULL; line = g_list_next(line) )
+	{
+		const char* lineType = gtk_widget_get_name(line->data);
+		if(  strcmp(lineType,commentOrVariableFragmentName) == 0 )
+		{
+			string = commentOrVariableToString(line->data,string);
+		}
+		else if(  strcmp(lineType,simpleJobFragmentName) == 0 )
+		{
+			string = simpleCronJobToString(line->data,string);
+		}
+		else if(  strcmp(lineType,advancedJobFragmentName) == 0 )
+		{
+			string = advancedCronJobToString(line->data,string);
+		}
+		else
+		{
+			// TODO: print into status bar
+			printf("Error: the widget '%s' could not be converted to string \n",lineType);
+		}
+	}
+	return string;
 }

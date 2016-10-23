@@ -37,9 +37,18 @@ void on_main_window_destroy();
 
 void on_time_selector_pressed(GtkWidget *button, wizardType type);
 
+void on_menu_new(GtkWidget *menuItem, GtkWidget *mainTable );
+void on_menu_open(GtkWidget *menuItem, GtkWidget *mainTable );
+void on_menu_save(GtkWidget *menuItem, GtkWidget *mainTable );
+void on_menu_save_as(GtkWidget *menuItem, GtkWidget *mainTable );
+void on_menu_close(GtkWidget *menuItem, GtkWidget *mainTable );
+void on_menu_copy(GtkWidget *menuItem, GtkWidget *mainTable );
+void on_menu_paste(GtkWidget *menuItem, GtkWidget *mainTable );
 void on_menu_add_comment(GtkWidget *menuItem, GtkWidget *mainTable );
 void on_menu_add_simple_job(GtkWidget *menuItem, GtkWidget *mainTable );
 void on_menu_add_advanced_job(GtkWidget *menuItem, GtkWidget *mainTable );
+void on_menu_index(GtkWidget *menuItem, GtkWidget *mainTable );
+void on_menu_about(GtkWidget *menuItem, GtkWidget *mainTable );
 
 gboolean on_drag_drop (GtkWidget      *widget,
                GdkDragContext *context,
@@ -63,4 +72,7 @@ void on_drag_data_get(GtkWidget *widget, GdkDragContext *context,GtkWidget *box)
 
 void on_drag_begin(GtkWidget *widget, GdkDragContext *context,GtkWidget *box);
 void on_drag_end(GtkWidget *widget, GdkDragContext *context,GtkWidget *box);
+
+char* mainTableToString(GtkWidget *mainTable);
+
 #endif //CRON_GUI_H

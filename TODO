@@ -1,9 +1,18 @@
 				
 Must Have:
 - write to file (save + save as)
+-- as well safe wrong stuff to file ( possibility to safe invalid files )
+-- save currently open tab ( text mode or extended mode )
+-- correct chmod for sudo / root ?
+
+- extra-tab to modify text ( plain editor vs. extended editor )
+-- as well should provide line numbers
+-- copy left to right / right to left on tab-switch
+-- validate on tab-switch
+
 - correct window-size on start
 - validate wizard-value when typed
-- validate whole file when wizard finished
+- validate whole file when wizard finished and after load
 - check that string-size is not exceeded
 - root /no-root? / sudo ?
 - use automake
@@ -11,5 +20,6 @@ Must Have:
 
 Planned Features:
 - Tooltips
+- separate gui-components -re-use for anacron, fstab, lightdm, rsnapshot, ...
 - Multi Language
 - Wizard-GUI's: Möglichkeit Interval direkt zu tippen ( validieren + aktives Fenster Zeigt getippten Interval )
