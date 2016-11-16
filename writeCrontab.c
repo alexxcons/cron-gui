@@ -35,4 +35,5 @@ int write_cron_tab(char* fileToWrite,char* crontabString)
 	}
 	fprintf(crontab, "%s\n", crontabString);
 	fclose(crontab);
+	return 0;
 }

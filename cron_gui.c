@@ -51,9 +51,30 @@ const int SIMPLE_TIMING_VALUES_SIZE	= 6;
 static GtkSizeGroup * sizeGroupLineNumbers = NULL;
 static GtkSizeGroup * sizeGroupTimePickerBox = NULL;
 
+static char* filePathCurrentlyLoaded = NULL;
+
 const char* commentOrVariableFragmentName	= "commentOrVariable";
 const char* simpleJobFragmentName			= "simpleJob";
 const char* advancedJobFragmentName			= "advancedJob";
+
+const char* DEFAULT_CRONTAB_PATH = "/etc/crontab";
+
+void displayInfo(char* text, char* param)
+{
+	printf("%s : %s\n",text,param);
+	// TODO
+}
+
+void displayError(char* text, char* param)
+{
+	printf("%s : %s\n",text,param);
+	// TODO
+}
+
+void markErrorInLine(GtkWidget *line)
+{
+	// TODO
+}
 
 char* expandString(char *string, const char *stringToAdd)
 {
@@ -113,6 +134,32 @@ void setDragDestination(GtkWidget *mainTable, GtkWidget *widget)
 	//g_signal_connect(widget, "drag-data-received",G_CALLBACK(on_drag_data_received),widget);
 	g_signal_connect(widget, "drag-motion",G_CALLBACK(on_drag_motion),mainTable);
 	g_signal_connect(widget, "drag-drop",G_CALLBACK(on_drag_drop),mainTable);
+}
+
+void loadFile( GtkWidget *mainTable, const char* fileToLoad )
+{
+	if( filePathCurrentlyLoaded != NULL )
+	{
+		free(filePathCurrentlyLoaded);
+	}
+
+	if( fileToLoad == NULL)
+	{
+		displayInfo("No file selected - attempt to load default crontab from",DEFAULT_CRONTAB_PATH);
+		read_cron_tab(mainTable,DEFAULT_CRONTAB_PATH);
+		filePathCurrentlyLoaded = strdup(DEFAULT_CRONTAB_PATH);
+	}
+	else
+	{
+		read_cron_tab(mainTable,fileToLoad);
+		filePathCurrentlyLoaded = strdup(fileToLoad);
+	}
+
+	if( filePathCurrentlyLoaded == 0 )
+	{
+		printf("Out of memory error\n");
+		exit(ERROR_EXIT);
+	}
 }
 
 void activate_main_gui(GtkApplication *app, const char* fileToLoad)
@@ -209,11 +256,7 @@ void activate_main_gui(GtkApplication *app, const char* fileToLoad)
 
 	initSizeGroups();
 
-	if( fileToLoad == NULL)
-		read_cron_tab(lines,"crontab");
-	else
-		read_cron_tab(lines,fileToLoad);
-
+	loadFile(lines,fileToLoad);
 	gtk_main();
 }
 
@@ -509,14 +552,41 @@ void on_menu_open(GtkWidget *menuItem, GtkWidget *mainTable )
 
 void on_menu_save(GtkWidget *menuItem, GtkWidget *mainTable )
 {
+	if( filePathCurrentlyLoaded == NULL )
+	{
+		displayError("No file loaded",""); // TODO: grayed out if no file loaded
+		return;
+	}
 	char* string = mainTableToString(mainTable);
-	printf("%s",string);
-	write_cron_tab("testfile.txt",string);
+	if(!write_cron_tab(filePathCurrentlyLoaded,string))
+	{
+		displayInfo("successfully saved file:", filePathCurrentlyLoaded);
+	}
 }
 
 void on_menu_save_as(GtkWidget *menuItem, GtkWidget *mainTable )
 {
-	printf("TODO: save as pressed\n");
+	if( filePathCurrentlyLoaded == NULL )
+	{
+		displayError("No file loaded",""); // TODO: grayed out if no file loaded
+		return;
+	}
+	GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_SAVE;
+	GtkWidget *dialog = gtk_file_chooser_dialog_new ("Save File as",main_window,action,"_Cancel",GTK_RESPONSE_CANCEL,"_Save",GTK_RESPONSE_ACCEPT,NULL);
+	gint res = gtk_dialog_run (GTK_DIALOG (dialog));
+	if (res == GTK_RESPONSE_ACCEPT)
+	{
+		char *filename;
+		GtkFileChooser *chooser = GTK_FILE_CHOOSER (dialog);
+		filename = gtk_file_chooser_get_filename (chooser);
+		char* string = mainTableToString(mainTable);
+		if(!write_cron_tab(filename,string))
+		{
+			displayInfo("successfully saved file:", filename);
+		}
+		g_free (filename);
+	}
+	gtk_widget_destroy (dialog);
 }
 
 void on_menu_close(GtkWidget *menuItem, GtkWidget *mainTable )
@@ -591,8 +661,8 @@ char* mainTableToString(GtkWidget *mainTable)
 		}
 		else
 		{
-			// TODO: print into status bar
-			printf("Error: the widget '%s' could not be converted to string \n",lineType);
+			displayError("Error: the following widget could not be converted to string",lineType);
+			markErrorInLine(line->data); // TODO;
 		}
 	}
 	return string;

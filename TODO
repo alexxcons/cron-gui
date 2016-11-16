@@ -1,19 +1,22 @@
 				
 Must Have:
-- write to file (save + save as)
--- as well safe wrong stuff to file ( possibility to safe invalid files )
--- save currently open tab ( text mode or extended mode )
--- correct chmod for sudo / root ?
+Prio 1 - display all kind of error in the statusbar
+
+- as well safe wrong stuff to file ( possibility to safe invalid files )
+- save currently open tab ( text mode or extended mode )
+- load from file
 
 - extra-tab to modify text ( plain editor vs. extended editor )
 -- as well should provide line numbers
 -- copy left to right / right to left on tab-switch
 -- validate on tab-switch
 
+
+
 - correct window-size on start
 - validate wizard-value when typed
 - validate whole file when wizard finished and after load
-- check that string-size is not exceeded
+- check that string-size is not exceeded ( use expandString as much as possible ) 
 - root /no-root? / sudo ?
 - use automake
 - build patch for step-size stuff in crontab: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=830821
@@ -23,3 +26,6 @@ Planned Features:
 - separate gui-components -re-use for anacron, fstab, lightdm, rsnapshot, ...
 - Multi Language
 - Wizard-GUI's: Möglichkeit Interval direkt zu tippen ( validieren + aktives Fenster Zeigt getippten Interval )
+- Menü --> Datein --> Drucken
+- Menü --> Bearbeiten --> Rückgängig / Widerholen , Löschen, Einstellungen
+- Menü --> Ansicht Farbschema / 
