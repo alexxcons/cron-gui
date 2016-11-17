@@ -140,7 +140,12 @@ void loadFile( GtkWidget *mainTable, const char* fileToLoad )
 {
 	if( filePathCurrentlyLoaded != NULL )
 	{
+		GList* lines = gtk_container_get_children(GTK_CONTAINER(mainTable));
+		for(GList* iter = lines; iter != NULL; iter = g_list_next(iter))
+			gtk_widget_destroy(GTK_WIDGET(iter->data));
+		g_list_free(lines);
 		free(filePathCurrentlyLoaded);
+		filePathCurrentlyLoaded = NULL;
 	}
 
 	if( fileToLoad == NULL)
@@ -161,6 +166,7 @@ void loadFile( GtkWidget *mainTable, const char* fileToLoad )
 		exit(ERROR_EXIT);
 	}
 }
+
 
 void activate_main_gui(GtkApplication *app, const char* fileToLoad)
 {
@@ -547,7 +553,18 @@ void on_menu_new(GtkWidget *menuItem, GtkWidget *mainTable )
 
 void on_menu_open(GtkWidget *menuItem, GtkWidget *mainTable )
 {
-	printf("TODO: open pressed\n");
+	GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_OPEN;
+	GtkWidget *dialog = gtk_file_chooser_dialog_new ("Open file",main_window,action,"_Cancel",GTK_RESPONSE_CANCEL,"_Open",GTK_RESPONSE_ACCEPT,NULL);
+	gint res = gtk_dialog_run (GTK_DIALOG (dialog));
+	if (res == GTK_RESPONSE_ACCEPT)
+	{
+		char *filename;
+		GtkFileChooser *chooser = GTK_FILE_CHOOSER (dialog);
+		filename = gtk_file_chooser_get_filename (chooser);
+		loadFile(mainTable, filename );
+		g_free (filename);
+	}
+	gtk_widget_destroy (dialog);
 }
 
 void on_menu_save(GtkWidget *menuItem, GtkWidget *mainTable )
