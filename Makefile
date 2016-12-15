@@ -15,18 +15,19 @@ CFLAGS += -DDEBIAN=1
 
 #HEADERS = cron_gui.h readCrontab.h
 # files to work with:
-SOURCES = pkg-cron/entry.c pkg-cron/env.c pkg-cron/misc.c readCrontab.c writeCrontab.c wizard.c cron_gui.c main.c
-SOURCES_TEST = 	pkg-cron/entry.c pkg-cron/env.c pkg-cron/misc.c readCrontab.c writeCrontab.c wizard.c cron_gui.c test.c
-#OBJS = 	main.o entry.o 
+SOURCES_CRON = pkg-cron/entry.c pkg-cron/env.c pkg-cron/misc.c
+SOURCES_BASE = readCrontab.c writeCrontab.c wizard.c cron_gui.c
+SOURCES_PROD = main.c
+SOURCES_TEST = test.c
 TARGET =	cron-gui
 
-# .o files have same name as .cpp files
-OBJS = $(SOURCES:%.c=%.o)
-OBJS_TEST = $(SOURCES_TEST:%.c=%.o)
+# replaces *.c with *.o in the variables 
+OBJS_PROD = $(SOURCES_CRON:%.c=%.o) $(SOURCES_BASE:%.c=%.o) $(SOURCES_PROD:%.c=%.o)
+OBJS_TEST = $(SOURCES_CRON:%.c=%.o) $(SOURCES_BASE:%.c=%.o) $(SOURCES_TEST:%.c=%.o)
 
 # Link command to compile + build binary:
-link:	$(OBJS)
-	gcc -I. entry.o env.o misc.o readCrontab.o writeCrontab.o wizard.o cron_gui.o main.o $(LINKER_FLAGS) -o $(TARGET) $(LIBS)
+link:	$(OBJS_PROD)
+	gcc -I. $(CFLAGS) $(OBJS_PROD) $(LINKER_FLAGS) -o $(TARGET) $(LIBS)
 
 main.o: main.c
 	gcc $(CFLAGS) -DMAIN_PROGRAM=1 -c $<
@@ -48,4 +49,4 @@ clean:
 	rm -f $(OBJS) $(OBJS_TEST) $(TARGET) test
 	
 test: $(OBJS_TEST)
-	gcc entry.o env.o misc.o readCrontab.o writeCrontab.o wizard.o cron_gui.o test.o $(LINKER_FLAGS) -o test $(LIBS)
+	gcc $(OBJS_TEST) $(LINKER_FLAGS) -o test $(LIBS)
