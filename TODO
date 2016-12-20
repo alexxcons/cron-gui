@@ -10,6 +10,8 @@ Prio 1 - display all kind of error in the statusbar
 -- copy left to right / right to left on tab-switch
 -- validate on tab-switch
 
+- display filename 
+
 - correct window-size on start
 - validate wizard-value when typed
 - validate whole file when wizard finished and after load
@@ -21,6 +23,7 @@ Prio 1 - display all kind of error in the statusbar
 Planned Features:
 - build patch for step-size stuff in crontab: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=830821
 
+- copy / paste in menu
 - Tooltips
 - separate gui-components -re-use for anacron, fstab, lightdm, rsnapshot, ...
 - Multi Language

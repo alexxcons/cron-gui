@@ -173,14 +173,14 @@ void entryToString(entry *e, char* string)
 	commandOfEntryToString(e,string);
 }
 
-void entryToFragment(entry *e, GtkWidget *mainTable)
+void entryToFragment(entry *e, GtkWidget *extendedEditor_linebox)
 {
 	char atString[MAX_AT_STRING] = "\0";
 	if(appendIf_At(e,atString))
 	{
 		char command[MAX_COMMAND] = "\0";
 		commandOfEntryToString(e,command);
-		addSimpleCronJob(mainTable,atString,command );
+		addSimpleCronJob(extendedEditor_linebox,atString,command );
 	}
 	else
 	{
@@ -196,7 +196,7 @@ void entryToFragment(entry *e, GtkWidget *mainTable)
 		monthOfEntryToString(e,month);
 		dowOfEntryToString(e,dow);
 		commandOfEntryToString(e,command);
-		addAdvancedCronJob(mainTable,minute,hour,dom,month,dow,command);
+		addAdvancedCronJob(extendedEditor_linebox,minute,hour,dom,month,dow,command);
 	}
 
 }
@@ -420,7 +420,7 @@ int get_comment(FILE *file, char *comment, int comment_size_max)
 	}
 }
 
-void get_leading_comments(FILE *crontab, GtkWidget *mainTable)
+void get_leading_comments(FILE *crontab, GtkWidget *extendedEditor_linebox)
 {
 	char comment[MAX_ENVSTR];
 	int commentFound = TRUE;
@@ -429,14 +429,50 @@ void get_leading_comments(FILE *crontab, GtkWidget *mainTable)
 		commentFound = get_comment(crontab,comment,MAX_ENVSTR);
 		if( commentFound )
 		{
-			addCommentOrVariable(mainTable,comment);
+			addCommentOrVariable(extendedEditor_linebox,comment);
 			printf("%s\n",comment );
 		}
 	}
 
 }
 
-int read_cron_tab(GtkWidget *mainTable,const char* fileToLoad)
+int read_cron_tab_plainTextEditor(GtkWidget *plainTextEditor_entry,const char* fileToLoad)
+{
+	if( verboseMode )
+	{
+		printf("Attempt to open file:\n");
+		printf("%s\n",fileToLoad);
+	}
+
+	gchar *contents;
+	GError *err = NULL;
+
+	g_file_get_contents (fileToLoad, &contents, NULL, &err);
+	g_assert ((contents == NULL && err != NULL) || (contents != NULL && err == NULL));
+	if (err != NULL)
+	  {
+	    // Report error to user, and free error
+	    g_assert (contents == NULL);
+	    fprintf(stderr, "Failed to open file '%s' : %s\n", fileToLoad, err->message);
+	    g_error_free (err);
+	  }
+	else
+	  {
+	    // Use file contents
+	    g_assert (contents != NULL);
+	    gtk_entry_set_text (plainTextEditor_entry,contents);
+	  }
+	return (0);
+}
+
+// TODO:
+// Only way to do checks is, by using a filedescriptor
+// So switching between tabs should lead to:
+// 1. dump to temp file
+// 2. read temp file with fd
+
+
+int read_cron_tab(GtkWidget *extendedEditor_linebox,const char* fileToLoad)
 {
 	entry	*e;
 	int eof = FALSE;
@@ -459,7 +495,7 @@ int read_cron_tab(GtkWidget *mainTable,const char* fileToLoad)
 
 	while (!CheckErrorCount && !eof)
 	{
-		get_leading_comments(crontab,mainTable);
+		get_leading_comments(crontab,extendedEditor_linebox);
 		switch (load_env(envstr, crontab))
 		{
 			case ERR:
@@ -469,14 +505,14 @@ int read_cron_tab(GtkWidget *mainTable,const char* fileToLoad)
 				e = load_entry(crontab, check_error, &pw, envp);
 				char string[MAX_COMMAND] = "\0";
 				entryToString(e,string);
-				entryToFragment(e,mainTable);
+				entryToFragment(e,extendedEditor_linebox);
 				printf("Cronjob: %s\n",string );
 				if (e)
 					free(e);
 				break;
 			case TRUE:
 				printf("environment var: %s\n",envstr );
-				addCommentOrVariable(mainTable, envstr);
+				addCommentOrVariable(extendedEditor_linebox, envstr);
 				break;
 		}
 	}
