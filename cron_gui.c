@@ -16,12 +16,12 @@
 #include "cron_gui.h"
 #include "wizard.h"
 #include <readCrontab.h>
-#include <writeCrontab.h>
 
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 const char * simpleTimingValues[] = {
     "@reboot",
@@ -32,29 +32,9 @@ const char * simpleTimingValues[] = {
     "@hourly"
 };
 
-enum
-{
-  TARGET_WHATEVER,
-};
-
-static GtkTargetEntry targetentries[] =
-{
-  { "GtkBox",        0, TARGET_WHATEVER },
-  { "STRING",        0, TARGET_WHATEVER },
-  { "GtkImage",        0, TARGET_WHATEVER },
-};
-
-const gint nTargetEntries = 3;
-
 const int SIMPLE_TIMING_VALUES_SIZE	= 6;
 
-const int NOTEBOOK_POS_EXTENDED_EDITOR	= 0;
-const int NOTEBOOK_POS_SIMPLE_EDITOR	= 1;
-
-static GtkSizeGroup * sizeGroupLineNumbers = NULL;
 static GtkSizeGroup * sizeGroupTimePickerBox = NULL;
-
-static char* filePathCurrentlyLoaded = NULL;
 
 const char* commentOrVariableFragmentName	= "commentOrVariable";
 const char* simpleJobFragmentName			= "simpleJob";
@@ -62,242 +42,54 @@ const char* advancedJobFragmentName			= "advancedJob";
 
 const char* DEFAULT_CRONTAB_PATH = "/etc/crontab";
 
-void displayInfo(const char* text, const char* param)
-{
-	printf("%s : %s\n",text,param);
-	// TODO
-}
-
-void displayError(const char* text, const char* param)
-{
-	printf("%s : %s\n",text,param);
-	// TODO
-}
-
-void markErrorInLine(GtkWidget *line)
-{
-	// TODO
-}
-
-char* expandString(char *string, const char *stringToAdd)
-{
-	if( stringToAdd == NULL )
-	{
-		return string;
-	}
-    const size_t sizeToAdd = strlen(stringToAdd);
-	if( sizeToAdd == 0 )
-	{
-		return string;
-	}
-    char *newBuffer = NULL;
-    if( string == NULL)
-    {
-    	newBuffer = malloc( ( sizeToAdd + 1)  * sizeof(*stringToAdd) );// + 1 for \0
-        //printf("malloc\n");
-    	newBuffer[0] = 0; // need to erase crap in first element, since we wanmt to strcat later
-    }
-    else
-    {
-    	const size_t sizeOld = strlen(string);
-        const size_t sizeNew = sizeOld + sizeToAdd;
-        //printf("sizeOld: %i\n",sizeOld);
-        //printf("sizeNew: %i\n",sizeNew);
-    	newBuffer = realloc( string, (sizeNew + 1)  * sizeof(*stringToAdd) );// + 1 for \0
-        //printf("realloc\n");
-    }
-
-    if ( newBuffer == NULL )
-    {
-        printf("Unexpected null pointer when malloc/realloc.\n");
-        exit(ERROR_EXIT);
-    }
-	strcat(newBuffer,stringToAdd);
-    //printf("%s",newBuffer);
-    return newBuffer;
-}
+const char* TEMP_FILE_NAME_TEMPLATE = "crontab-gui-XXXXXX";
 
 void initSizeGroups()
 {
-	sizeGroupLineNumbers = gtk_size_group_new (GTK_SIZE_GROUP_HORIZONTAL);
 	sizeGroupTimePickerBox = gtk_size_group_new (GTK_SIZE_GROUP_HORIZONTAL);
 }
 
-void addLineNumber(GtkWidget *extendedEditor_linebox,GtkWidget *lineBox)
+void add_toolbar_item(const context_base* context, const char* actionName, const GtkCallback* callback, void * parameter)
 {
-	GtkWidget *lineNumberLabel = gtk_label_new ("");
-	gtk_container_add (GTK_CONTAINER (lineBox), lineNumberLabel);
-	gtk_size_group_add_widget (sizeGroupLineNumbers,lineNumberLabel);
-	fixLineNumbers(extendedEditor_linebox);
-}
-
-void setDragDestination(GtkWidget *extendedEditor_linebox, GtkWidget *widget)
-{
-	gtk_drag_dest_set (widget, GTK_DEST_DEFAULT_MOTION, targetentries, nTargetEntries, GDK_ACTION_MOVE);
-	//g_signal_connect(widget, "drag-data-received",G_CALLBACK(on_drag_data_received),widget);
-	g_signal_connect(widget, "drag-motion",G_CALLBACK(on_drag_motion),extendedEditor_linebox);
-	g_signal_connect(widget, "drag-drop",G_CALLBACK(on_drag_drop),extendedEditor_linebox);
-}
-
-void unloadFile( GtkWidget *notebook)
-{
-	GList* lines = gtk_container_get_children(GTK_CONTAINER(get_extendedEditor_linebox_from_notebook(notebook)));
-	for(GList* iter = lines; iter != NULL; iter = g_list_next(iter))
-		gtk_widget_destroy(GTK_WIDGET(iter->data));
-	g_list_free(lines);
-	gtk_entry_set_text (get_plainTextEditor_entry_from_notebook(notebook),"");
-	free(filePathCurrentlyLoaded);
-	filePathCurrentlyLoaded = NULL;
-}
-
-void loadFile( GtkWidget *notebook, const char* fileToLoad )
-{
-	if( filePathCurrentlyLoaded != NULL )
-		unloadFile(notebook);
-
-	if( fileToLoad == NULL)
-	{
-		displayInfo("No file selected - attempt to load default crontab from",DEFAULT_CRONTAB_PATH);
-		read_cron_tab(get_extendedEditor_linebox_from_notebook(notebook), DEFAULT_CRONTAB_PATH);
-		read_cron_tab_plainTextEditor(get_plainTextEditor_entry_from_notebook(notebook), fileToLoad);
-		filePathCurrentlyLoaded = strdup(DEFAULT_CRONTAB_PATH);
-	}
-	else
-	{
-		read_cron_tab(get_extendedEditor_linebox_from_notebook(notebook),fileToLoad);
-		read_cron_tab_plainTextEditor(get_plainTextEditor_entry_from_notebook(notebook), fileToLoad);
-		filePathCurrentlyLoaded = strdup(fileToLoad);
-	}
-
-	if( filePathCurrentlyLoaded == 0 )
-	{
-		printf("Out of memory error\n");
-		exit(ERROR_EXIT);
-	}
-}
-
-GtkWidget* get_extendedEditor_linebox_from_notebook(GtkWidget* notebook)
-{
-	GtkWidget* extendedEditor = gtk_notebook_get_nth_page (notebook,NOTEBOOK_POS_EXTENDED_EDITOR);
-	GList *extendedEditor_linebox = gtk_container_get_children(GTK_CONTAINER(extendedEditor));
-	return extendedEditor_linebox->data;
-}
-
-GtkWidget* get_plainTextEditor_entry_from_notebook(GtkWidget* notebook)
-{
-	return gtk_notebook_get_nth_page (notebook,NOTEBOOK_POS_SIMPLE_EDITOR);
+	GtkWidget *extendedEditor_toolbox = get_extendedEditor_toolbox_from_notebook(context->notebook);
+	GtkWidget *toolbarItem = gtk_button_new_with_label (actionName);
+	gtk_container_add (GTK_CONTAINER (extendedEditor_toolbox), toolbarItem);
+	g_signal_connect(G_OBJECT(toolbarItem), "clicked", G_CALLBACK(callback), parameter);
 }
 
 void activate_main_gui(GtkApplication *app, const char* fileToLoad)
 {
-	//	GtkCssProvider *cssProvider = gtk_css_provider_new ();
-	//	gtk_css_provider_load_from_path(cssProvider,"./test.css",NULL);
-	//	gtk_style_context_add_provider_for_screen(gdk_screen_get_default(),GTK_STYLE_PROVIDER(cssProvider),GTK_STYLE_PROVIDER_PRIORITY_USER);
-
-	GtkWidget *window = gtk_application_window_new(app);
-	g_signal_connect (window, "destroy", G_CALLBACK (on_main_window_destroy), NULL);
-	main_window = GTK_WINDOW(window);
-
-	gtk_window_set_default_size (GTK_WINDOW (window), 200, 200);
-
-	GtkWidget *main_box = gtk_box_new (GTK_ORIENTATION_VERTICAL,0);
-	gtk_container_add (GTK_CONTAINER (window), main_box);
-
-	GtkWidget *menuBar = gtk_menu_bar_new();
-	gtk_container_add (GTK_CONTAINER (main_box), menuBar);
-
-	GtkWidget *extendedEditor = gtk_box_new(GTK_ORIENTATION_VERTICAL,0);
-	GtkWidget *extendedEditor_linebox = gtk_box_new(GTK_ORIENTATION_VERTICAL,0);
-	GtkWidget *extendedEditor_toolbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL,3);
-
-	gtk_container_add (GTK_CONTAINER (extendedEditor), extendedEditor_linebox);
-	gtk_container_add (GTK_CONTAINER (extendedEditor), extendedEditor_toolbox);
-
-	GtkWidget *notebook = gtk_notebook_new();
-	gtk_notebook_set_tab_pos (GTK_NOTEBOOK(notebook),GTK_POS_BOTTOM);
-	gtk_container_add (GTK_CONTAINER (main_box), notebook);
-	gtk_notebook_append_page (GTK_NOTEBOOK(notebook),extendedEditor,gtk_label_new ("extended"));
-	GtkWidget * plainTextEditor_entry = gtk_entry_new();
-	gtk_notebook_append_page (GTK_NOTEBOOK(notebook),plainTextEditor_entry,gtk_label_new ("plain text"));
-	g_signal_connect (notebook, "switch-page", G_CALLBACK(on_switch_page_main_gui), main_box);
-
-	GtkWidget *fileMenu = gtk_menu_new();
-	GtkWidget *fileBase = gtk_menu_item_new_with_label("File");
-	gtk_menu_item_set_submenu(GTK_MENU_ITEM(fileBase), fileMenu);
-	gtk_menu_shell_append(GTK_MENU_SHELL(menuBar), fileBase);
-	GtkWidget *fileNew = gtk_menu_item_new_with_label("New");
-	GtkWidget *fileOpen = gtk_menu_item_new_with_label("Open");
-	GtkWidget *fileSave = gtk_menu_item_new_with_label("Save");
-	GtkWidget *fileSaveAs = gtk_menu_item_new_with_label("Save as");
-	gtk_menu_shell_append(GTK_MENU_SHELL(fileMenu), fileNew);
-	gtk_menu_shell_append(GTK_MENU_SHELL(fileMenu), fileOpen);
-	gtk_menu_shell_append(GTK_MENU_SHELL(fileMenu), fileSave);
-	gtk_menu_shell_append(GTK_MENU_SHELL(fileMenu), fileSaveAs);
-	g_signal_connect(G_OBJECT(fileNew), "activate", G_CALLBACK(on_menu_new), notebook);
-	g_signal_connect(G_OBJECT(fileOpen), "activate", G_CALLBACK(on_menu_open), notebook);
-	g_signal_connect(G_OBJECT(fileSave), "activate", G_CALLBACK(on_menu_save), notebook);
-	g_signal_connect(G_OBJECT(fileSaveAs), "activate", G_CALLBACK(on_menu_save_as), notebook);
-
-	GtkWidget *editMenu = gtk_menu_new();
-	GtkWidget *editBase = gtk_menu_item_new_with_label("Edit");
-	gtk_menu_item_set_submenu(GTK_MENU_ITEM(editBase), editMenu);
-	gtk_menu_shell_append(GTK_MENU_SHELL(menuBar), editBase);
-	GtkWidget *editCopy = gtk_menu_item_new_with_label("Copy");
-	GtkWidget *editPaste = gtk_menu_item_new_with_label("Paste");
-	GtkWidget *editAddSimpleJob = gtk_menu_item_new_with_label("Add Simple Job");
-	GtkWidget *editAddAdvancedJob = gtk_menu_item_new_with_label("Add Advanced Job");
-	GtkWidget *editAddComment = gtk_menu_item_new_with_label("Add Comment/Variable");
-	gtk_menu_shell_append(GTK_MENU_SHELL(editMenu), editCopy);
-	gtk_menu_shell_append(GTK_MENU_SHELL(editMenu), editPaste);
-	gtk_menu_shell_append(GTK_MENU_SHELL(editMenu), editAddSimpleJob);
-	gtk_menu_shell_append(GTK_MENU_SHELL(editMenu), editAddAdvancedJob);
-	gtk_menu_shell_append(GTK_MENU_SHELL(editMenu), editAddComment);
-	g_signal_connect(G_OBJECT(editCopy), "activate", G_CALLBACK(on_menu_copy), extendedEditor_linebox);
-	g_signal_connect(G_OBJECT(editPaste), "activate", G_CALLBACK(on_menu_paste), extendedEditor_linebox);
-	g_signal_connect(G_OBJECT(editAddSimpleJob), "activate", G_CALLBACK(on_add_simple_job), extendedEditor_linebox);
-	g_signal_connect(G_OBJECT(editAddAdvancedJob), "activate", G_CALLBACK(on_add_advanced_job), extendedEditor_linebox);
-	g_signal_connect(G_OBJECT(editAddComment), "activate", G_CALLBACK(on_add_comment), extendedEditor_linebox);
-
-	GtkWidget *helpMenu = gtk_menu_new();
-	GtkWidget *helpBase = gtk_menu_item_new_with_label("Help");
-	gtk_menu_item_set_submenu(GTK_MENU_ITEM(helpBase), helpMenu);
-	gtk_menu_shell_append(GTK_MENU_SHELL(menuBar), helpBase);
-	GtkWidget *helpIndex = gtk_menu_item_new_with_label("Index");
-	GtkWidget *helpAbout = gtk_menu_item_new_with_label("About");
-	gtk_menu_shell_append(GTK_MENU_SHELL(helpMenu), helpIndex);
-	gtk_menu_shell_append(GTK_MENU_SHELL(helpMenu), helpAbout);
-	g_signal_connect(G_OBJECT(helpIndex), "activate", G_CALLBACK(on_menu_index), extendedEditor_linebox);
-	g_signal_connect(G_OBJECT(helpAbout), "activate", G_CALLBACK(on_menu_about), extendedEditor_linebox);
-
-	GtkWidget *addComment = gtk_button_new_with_label ("addComment");
-	gtk_container_add (GTK_CONTAINER (extendedEditor_toolbox), addComment);
-
-	GtkWidget *trash = gtk_image_new_from_icon_name ("user-trash-symbolic",GTK_ICON_SIZE_LARGE_TOOLBAR);
-	gtk_widget_set_name(trash,"trash");
-	setDragDestination(extendedEditor_linebox,trash);
-	gtk_widget_set_hexpand (trash,TRUE);
-	gtk_container_add (GTK_CONTAINER (extendedEditor_toolbox), trash);
-	GtkWidget *addSimpleJob = gtk_button_new_with_label ("addSimpleJob");
-	gtk_container_add (GTK_CONTAINER (extendedEditor_toolbox), addSimpleJob);
-	GtkWidget *addAdvancedJob = gtk_button_new_with_label ("addAdvancedJob");
-	gtk_container_add (GTK_CONTAINER (extendedEditor_toolbox), addAdvancedJob);
-	g_signal_connect(G_OBJECT(addSimpleJob), "clicked", G_CALLBACK(on_add_simple_job), extendedEditor_linebox);
-	g_signal_connect(G_OBJECT(addAdvancedJob), "clicked", G_CALLBACK(on_add_advanced_job), extendedEditor_linebox);
-	g_signal_connect(G_OBJECT(addComment), "clicked", G_CALLBACK(on_add_comment), extendedEditor_linebox);
-
-	GtkWidget *statusBar = gtk_statusbar_new();
-	gtk_container_add (GTK_CONTAINER (main_box), statusBar);
-
-	gtk_widget_show_all (window);
-
+	printf("activate_main_gui 1\n");
+	context_base context;
+	context.cb_extended2plain = extended2plain;
+	context.cb_plain2extended = plain2extended;
+	context.gui_specific_data = malloc(sizeof(wizardType));
+	activate_main_gui_base(app,fileToLoad, &context);
+	add_toolbar_item(&context, "Add Simple Job", on_add_simple_job, &context);
+	add_toolbar_item(&context, "Add Advanced Job", on_add_advanced_job, &context);
+	add_toolbar_item(&context, "Add Comment", on_add_comment, &context);
+	printf("activate_main_gui 2\n");
+	gtk_widget_show_all (context.window);
+	printf("activate_main_gui 3\n");
+	initSizeGroupsBase(&context);
 	initSizeGroups();
-
-	loadFile(notebook,fileToLoad);
+	printf("activate_main_gui 4\n");
+	if( fileToLoad == NULL)
+	{
+		displayInfo("No file selected - attempt to load default crontab from",DEFAULT_CRONTAB_PATH);
+		fileToLoad = strdup(DEFAULT_CRONTAB_PATH);
+	}
+	printf("activate_main_gui 5\n");
+	loadFile(&context,fileToLoad);
+	printf("activate_main_gui 6\n");
 	gtk_main();
 }
 
-void addCommentOrVariable(GtkWidget *extendedEditor_linebox, const char *text)
+void addCommentOrVariable(const char *text, context_base* context)
 {
+	printf("addCommentOrVariable 1\n");
+	GtkWidget *extendedEditor_linebox = get_extendedEditor_linebox_from_notebook(context->notebook);
+	printf("addCommentOrVariable 2\n");
 	GtkWidget *box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL,0);
 	gtk_widget_set_name (box,commentOrVariableFragmentName);
 	setDragDestination(extendedEditor_linebox, box);
@@ -317,18 +109,9 @@ void addCommentOrVariable(GtkWidget *extendedEditor_linebox, const char *text)
 	gtk_widget_show_all (box);
 }
 
-char* commentOrVariableToString(GtkWidget *commentOrVariable, char* string)
+void addSimpleCronJob(const char *simpleSelector, const char *command, context_base* context)
 {
-	GList *element_lineNumber = gtk_container_get_children(GTK_CONTAINER(commentOrVariable));
-	GList *element_textBox = g_list_next(element_lineNumber);
-	GtkWidget* textbox =  element_textBox->data;
-	string = expandString(string,gtk_entry_get_text(GTK_ENTRY(textbox)));
-	string = expandString(string,"\n");
-	return string;
-}
-
-void addSimpleCronJob(GtkWidget *extendedEditor_linebox, const char *simpleSelector, const char *command)
-{
+	GtkWidget *extendedEditor_linebox = get_extendedEditor_linebox_from_notebook(context->notebook);
 	GtkWidget *box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL,0);
 	gtk_widget_set_name (box,simpleJobFragmentName);
 	gtk_container_add (GTK_CONTAINER (extendedEditor_linebox), box);
@@ -358,164 +141,31 @@ void addSimpleCronJob(GtkWidget *extendedEditor_linebox, const char *simpleSelec
 	gtk_widget_show_all (box);
 }
 
-char* simpleCronJobToString(GtkWidget *simpleCronJob, char* string)
+void simpleCronJob2Text(GtkWidget *simpleCronJob, GtkWidget *plainTextEditor_textView)
 {
 	GList *element_lineNumber = gtk_container_get_children(GTK_CONTAINER(simpleCronJob));
 	GList *element_timePicker = g_list_next(element_lineNumber);
 	GList *element_command = g_list_next(element_timePicker);
 	GtkWidget* timePicker =  element_timePicker->data;
 	GtkWidget* command =  element_command->data;
-	string = expandString(string,gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(timePicker)));
-	string = expandString(string," ");
-	string = expandString(string,gtk_entry_get_text(GTK_ENTRY(command)));
-	string = expandString(string,"\n");
-	return string;
+	plainTextEditor_textView_append(plainTextEditor_textView,gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(timePicker)));
+	plainTextEditor_textView_append(plainTextEditor_textView," ");
+	plainTextEditor_textView_append(plainTextEditor_textView,gtk_entry_get_text(GTK_ENTRY(command)));
+	plainTextEditor_textView_append(plainTextEditor_textView,"\n");
 }
 
-GtkWidget *dragSource = NULL;
-
-gboolean on_drag_drop (GtkWidget      *widget,
-               GdkDragContext *context,
-               gint            x,
-               gint            y,
-               guint           time,
-               GtkWidget *extendedEditor_linebox)
-{
-	//printf("on_drag_drop: %s\n",gtk_widget_get_name (widget));
-	if( strcmp(gtk_widget_get_name (widget),"trash") == 0 && dragSource != NULL)
-	{
-		gtk_drag_finish(context,TRUE,FALSE,time);
-		gtk_container_remove (GTK_CONTAINER(extendedEditor_linebox), dragSource);
-		fixLineNumbers(extendedEditor_linebox);
-		return TRUE;
-	}
-
-	if(dragSource)
-		gtk_drag_unhighlight (dragSource);
-	gtk_drag_finish(context,FALSE,FALSE,time);
-	dragSource = NULL;
-	return TRUE;
-}
-
-void fixLineNumbers(GtkWidget *extendedEditor_linebox)
-{
-	GList *lines = gtk_container_get_children(GTK_CONTAINER(extendedEditor_linebox));
-	int lineNumber = 0;
-	for( GList *line = lines; line != NULL; line = g_list_next(line) )
-	{
-		lineNumber++;
-		GList *firstEntry = gtk_container_get_children(GTK_CONTAINER(line->data));
-		GtkLabel* label = GTK_LABEL(firstEntry->data); // first child
-
-		int length = snprintf( NULL, 0, "%d", lineNumber );
-		char* lineNumberStr = malloc( length + 1 );
-		snprintf( lineNumberStr, length + 1, "%d", lineNumber );
-		gtk_label_set_text(label,lineNumberStr);
-		free(lineNumberStr);
-	}
-}
-
-gboolean on_drag_motion(GtkWidget      *widget,
-        GdkDragContext *context,
-        gint            x,
-        gint            y,
-        guint           time,GtkWidget *extendedEditor_linebox)
-{
-	if(dragSource == NULL)
-		return FALSE;
-
-	//printf("on_drag_motion: %s\n",gtk_widget_get_name (widget));
-
-	GtkWidget *destBox = NULL;
-	if( strcmp(gtk_widget_get_name (widget),"GtkEntry") == 0)
-	{
-		destBox = gtk_widget_get_parent(widget);
-	}
-	else if( strcmp(gtk_widget_get_name (widget),"GtkBox") == 0 )
-	{
-		destBox = widget;
-	}
-	else
-	{
-		return FALSE;
-	}
-
-	if( dragSource == destBox )
-		return FALSE;
-
-	GValue destIndex = G_VALUE_INIT;
-	g_value_init (&destIndex, G_TYPE_INT);
-	gtk_container_child_get_property(GTK_CONTAINER(extendedEditor_linebox),destBox,"position",&destIndex);
-	if( g_value_get_int(&destIndex) < 0 )
-		return FALSE;
-	gtk_box_reorder_child (GTK_BOX(extendedEditor_linebox),dragSource,g_value_get_int(&destIndex));
-	fixLineNumbers(extendedEditor_linebox);
-	return TRUE;
-}
-
-
-//void on_drag_data_received(GtkWidget        *widget,
-//        GdkDragContext   *context,
-//        gint              x,
-//        gint              y,
-//        GtkSelectionData *data,
-//        guint             info,
-//        guint             time,GtkWidget *box)
-//{
-//	printf("on_drag_data_received\n");
-//}
-//
-//void on_drag_data_get(GtkWidget *widget, GdkDragContext *context,GtkWidget *box)
-//{
-//	printf("on_drag_data_get\n");
-//}
-
-void on_drag_end(GtkWidget *widget, GdkDragContext *context,GtkWidget *extendedEditor_linebox)
-{
-	//printf("on_drag_end: %s\n",gtk_widget_get_name (widget));
-	if(dragSource)
-		gtk_drag_unhighlight (dragSource);
-	dragSource = NULL;
-}
-
-void on_drag_begin(GtkWidget *widget, GdkDragContext *context,GtkWidget *box)
-{
-	dragSource = box;
-	gtk_drag_dest_unset (box); //drag-source has to differ from drag-dest
-	//printf("on_drag_begin\n");
-	gtk_drag_highlight (box);
-	//gtk_container_remove(GTK_CONTAINER(box),widget);
-	//gtk_drag_set_icon_widget ( context, widget, 1, 1);
-}
-
-void addTimeSelectorButton(GtkWidget *buttonBox, int type, const char* value )
+void addTimeSelectorButton(GtkWidget *buttonBox, int type, const char* value, context_base* context )
 {
 	GtkWidget *button = gtk_button_new_with_label (value);
 	gtk_container_add (GTK_CONTAINER (buttonBox), button);
-	g_signal_connect (button, "clicked", G_CALLBACK (on_time_selector_pressed), type);
+	wizardType* extraData = (wizardType*)context->gui_specific_data;
+	*extraData = type;
+	g_signal_connect (button, "clicked", G_CALLBACK (on_time_selector_pressed), context);
 }
 
-GtkWidget* addDragDropButton(GtkWidget *box, GtkWidget *extendedEditor_linebox )
+void addAdvancedCronJob(const char *minute, const char *hour, const char *dom, const char *month, const char *dow, const char *command, context_base* context)
 {
-	GtkWidget *dragButton = gtk_entry_new ();
-	setDragDestination(extendedEditor_linebox, dragButton);
-	gtk_entry_set_width_chars (GTK_ENTRY(dragButton),3);
-	gtk_entry_set_icon_from_icon_name (GTK_ENTRY(dragButton), GTK_ENTRY_ICON_SECONDARY,"view-app-grid-symbolic.symbolic");
-	GValue editable = G_VALUE_INIT;
-	g_value_init (&editable, G_TYPE_BOOLEAN	);
-	g_value_set_boolean (&editable,FALSE);
-	g_object_set_property(G_OBJECT(dragButton),"editable",&editable);
-	GtkTargetList * list = gtk_target_list_new (targetentries, nTargetEntries);
-	gtk_entry_set_icon_drag_source (GTK_ENTRY(dragButton), GTK_ENTRY_ICON_SECONDARY, list, GDK_ACTION_MOVE);
-	g_signal_connect(dragButton, "drag-begin",G_CALLBACK(on_drag_begin),box);
-	g_signal_connect(dragButton, "drag-end",G_CALLBACK(on_drag_end),extendedEditor_linebox);
-	//g_signal_connect(dragButton, "drag-data-get",G_CALLBACK(on_drag_data_get),extendedEditor_linebox);
-	gtk_container_add (GTK_CONTAINER (box), dragButton);
-	return dragButton;
-}
-
-void addAdvancedCronJob(GtkWidget *extendedEditor_linebox, const char *minute, const char *hour, const char *dom, const char *month, const char *dow, const char *command)
-{
+	GtkWidget *extendedEditor_linebox = get_extendedEditor_linebox_from_notebook(context->notebook);
 	GtkWidget *box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL,0);
 	gtk_widget_set_name (box,advancedJobFragmentName);
 	gtk_container_add (GTK_CONTAINER (extendedEditor_linebox), box);
@@ -527,11 +177,11 @@ void addAdvancedCronJob(GtkWidget *extendedEditor_linebox, const char *minute, c
 	gtk_container_add (GTK_CONTAINER (box), buttons);
 	gtk_size_group_add_widget (sizeGroupTimePickerBox,buttons);
 
-	addTimeSelectorButton(buttons,MINUTE,minute);
-	addTimeSelectorButton(buttons,HOUR,hour);
-	addTimeSelectorButton(buttons,DOM,dom);
-	addTimeSelectorButton(buttons,MONTH,month);
-	addTimeSelectorButton(buttons,DOW,dow);
+	addTimeSelectorButton(buttons,MINUTE,minute, context);
+	addTimeSelectorButton(buttons,HOUR,hour, context);
+	addTimeSelectorButton(buttons,DOM,dom, context);
+	addTimeSelectorButton(buttons,MONTH,month, context);
+	addTimeSelectorButton(buttons,DOW,dow, context);
 
 	GtkWidget *commandBox = gtk_entry_new();
 	setDragDestination(extendedEditor_linebox, commandBox);
@@ -543,173 +193,142 @@ void addAdvancedCronJob(GtkWidget *extendedEditor_linebox, const char *minute, c
 	gtk_widget_show_all (box);
 }
 
-char* advancedCronJobToString(GtkWidget *advancedCronJob, char* string)
+void advancedCronJob2Text(GtkWidget *advancedCronJob, GtkWidget *plainTextEditor_textView)
 {
 	GList *element_lineNumber = gtk_container_get_children(GTK_CONTAINER(advancedCronJob));
 	GList *element_buttons = g_list_next(element_lineNumber);
 	GtkWidget* timeSelector;
 	GList *element_minute = gtk_container_get_children(GTK_CONTAINER(element_buttons->data));
 	timeSelector =  element_minute->data;
-	string = expandString(string,gtk_button_get_label(GTK_BUTTON(timeSelector)));
-	string = expandString(string," ");
+	plainTextEditor_textView_append(plainTextEditor_textView,gtk_button_get_label(GTK_BUTTON(timeSelector)));
+	plainTextEditor_textView_append(plainTextEditor_textView," ");
 	GList *element_hour = g_list_next(element_minute);
 	timeSelector =  element_hour->data;
-	string = expandString(string,gtk_button_get_label(GTK_BUTTON(timeSelector)));
-	string = expandString(string," ");
+	plainTextEditor_textView_append(plainTextEditor_textView,gtk_button_get_label(GTK_BUTTON(timeSelector)));
+	plainTextEditor_textView_append(plainTextEditor_textView," ");
 	GList *element_dom = g_list_next(element_hour);
 	timeSelector =  element_dom->data;
-	string = expandString(string,gtk_button_get_label(GTK_BUTTON(timeSelector)));
-	string = expandString(string," ");
+	plainTextEditor_textView_append(plainTextEditor_textView,gtk_button_get_label(GTK_BUTTON(timeSelector)));
+	plainTextEditor_textView_append(plainTextEditor_textView," ");
 	GList *element_month = g_list_next(element_dom);
 	timeSelector =  element_month->data;
-	string = expandString(string,gtk_button_get_label(GTK_BUTTON(timeSelector)));
-	string = expandString(string," ");
+	plainTextEditor_textView_append(plainTextEditor_textView,gtk_button_get_label(GTK_BUTTON(timeSelector)));
+	plainTextEditor_textView_append(plainTextEditor_textView," ");
 	GList *element_dow = g_list_next(element_month);
 	timeSelector =  element_dow->data;
-	string = expandString(string,gtk_button_get_label(GTK_BUTTON(timeSelector)));
-	string = expandString(string," ");
+	plainTextEditor_textView_append(plainTextEditor_textView,gtk_button_get_label(GTK_BUTTON(timeSelector)));
+	plainTextEditor_textView_append(plainTextEditor_textView," ");
 
 	GList *element_command = g_list_next(element_buttons);
 	GtkWidget* command =  element_command->data;
-	string = expandString(string,gtk_entry_get_text(GTK_ENTRY(command)));
-	string = expandString(string,"\n");
-	return string;
+	plainTextEditor_textView_append(plainTextEditor_textView,gtk_entry_get_text(GTK_ENTRY(command)));
+
+	plainTextEditor_textView_append(plainTextEditor_textView,"\n");
 }
 
-void on_add_comment(GtkWidget *source, GtkWidget *extendedEditor_linebox )
+void on_add_comment(GtkWidget *source, context_base* context )
 {
-	addCommentOrVariable(extendedEditor_linebox, "# Put comment here");
+	addCommentOrVariable("# Put comment here", context);
 }
 
-void on_add_simple_job(GtkWidget *source, GtkWidget *extendedEditor_linebox )
+void on_add_simple_job(GtkWidget *source, context_base* context )
 {
-	addSimpleCronJob(extendedEditor_linebox, simpleTimingValues[0], "command to execute");
+	addSimpleCronJob(simpleTimingValues[0], "command to execute", context);
 }
 
-void on_add_advanced_job(GtkWidget *source, GtkWidget *extendedEditor_linebox )
+void on_add_advanced_job(GtkWidget *source, context_base* context )
 {
-	addAdvancedCronJob( extendedEditor_linebox, "0", "0", "*", "*", "*", "command to execute");
+	addAdvancedCronJob("0", "0", "*", "*", "*", "command to execute", context);
 }
 
-void on_menu_new(GtkWidget *menuItem, GtkWidget *notebook )
+void on_time_selector_pressed(GtkWidget *button, context_base* context)
 {
-	unloadFile(notebook);
+	runWizard( *(wizardType*)(context->gui_specific_data), context->main_window, button);
 }
 
-void on_menu_open(GtkWidget *menuItem, GtkWidget *notebook )
+void extended2plain(void* context)
 {
-	GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_OPEN;
-	GtkWidget *dialog = gtk_file_chooser_dialog_new ("Open file",main_window,action,"_Cancel",GTK_RESPONSE_CANCEL,"_Open",GTK_RESPONSE_ACCEPT,NULL);
-	gint res = gtk_dialog_run (GTK_DIALOG (dialog));
-	if (res == GTK_RESPONSE_ACCEPT)
-	{
-		char *filename;
-		GtkFileChooser *chooser = GTK_FILE_CHOOSER (dialog);
-		filename = gtk_file_chooser_get_filename (chooser);
-		loadFile(notebook, filename );
-		g_free (filename);
-	}
-	gtk_widget_destroy (dialog);
-}
-
-void on_menu_save(GtkWidget *menuItem, GtkWidget *notebook )
-{
-	if( filePathCurrentlyLoaded == NULL )
-	{
-		displayError("No file loaded",""); // TODO: grayed out if no file loaded
-		return;
-	}
-	char* string = extendedEditorToString(get_extendedEditor_linebox_from_notebook(notebook));
-	if(!write_cron_tab(filePathCurrentlyLoaded,string))
-	{
-		displayInfo("successfully saved file:", filePathCurrentlyLoaded);
-	}
-}
-
-void on_menu_save_as(GtkWidget *menuItem, GtkWidget *notebook )
-{
-	if( filePathCurrentlyLoaded == NULL )
-	{
-		displayError("No file loaded",""); // TODO: grayed out if no file loaded
-		return;
-	}
-	GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_SAVE;
-	GtkWidget *dialog = gtk_file_chooser_dialog_new ("Save File as",main_window,action,"_Cancel",GTK_RESPONSE_CANCEL,"_Save",GTK_RESPONSE_ACCEPT,NULL);
-	gint res = gtk_dialog_run (GTK_DIALOG (dialog));
-	if (res == GTK_RESPONSE_ACCEPT)
-	{
-		char *filename;
-		GtkFileChooser *chooser = GTK_FILE_CHOOSER (dialog);
-		filename = gtk_file_chooser_get_filename (chooser);
-		char* string = extendedEditorToString(get_extendedEditor_linebox_from_notebook(notebook));
-		if(!write_cron_tab(filename,string))
-		{
-			displayInfo("successfully saved file:", filename);
-		}
-		g_free (filename);
-	}
-	gtk_widget_destroy (dialog);
-}
-
-void on_menu_copy(GtkWidget *menuItem, GtkWidget *extendedEditor_linebox )
-{
-	printf("TODO: copy pressed - not yet implemented\n");
-}
-
-void on_menu_paste(GtkWidget *menuItem, GtkWidget *extendedEditor_linebox )
-{
-	printf("TODO: paste pressed - not yet implemented\n");
-}
-
-void on_menu_index(GtkWidget *menuItem, GtkWidget *extendedEditor_linebox )
-{
-	printf("TODO: index pressed\n");
-}
-
-void on_menu_about(GtkWidget *menuItem, GtkWidget *extendedEditor_linebox )
-{
-	printf("TODO: about pressed\n");
-}
-
-void on_main_window_destroy()
-{
-    gtk_main_quit();
-}
-
-void on_time_selector_pressed(GtkWidget *button, wizardType type)
-{
-	runWizard( type, main_window, button);
-}
-
-void on_switch_page_main_gui(GtkNotebook *notebook, GtkWidget *page,guint page_num, GtkWidget *main_box )
-{
-	printf("TODO: on_switch_page\n");
-}
-
-char* extendedEditorToString(GtkWidget *extendedEditor_linebox)
-{
-	char* string = NULL;
-	GList *lines = gtk_container_get_children(GTK_CONTAINER(extendedEditor_linebox));
+	context_base* ctx = (context_base*)context;
+	GtkWidget* plainTextEditor_textView = get_plainTextEditor_textView_from_notebook(ctx->notebook);
+	plainTextEditor_textView_clear(plainTextEditor_textView);
+	GList *lines = gtk_container_get_children(GTK_CONTAINER(get_extendedEditor_linebox_from_notebook(ctx->notebook)));
 	for( GList *line = lines; line != NULL; line = g_list_next(line) )
 	{
 		const char* lineType = gtk_widget_get_name(line->data);
 		if(  strcmp(lineType,commentOrVariableFragmentName) == 0 )
 		{
-			string = commentOrVariableToString(line->data,string);
+			extendedEditorCommentLine2Text(line->data,plainTextEditor_textView);
 		}
 		else if(  strcmp(lineType,simpleJobFragmentName) == 0 )
 		{
-			string = simpleCronJobToString(line->data,string);
+			simpleCronJob2Text(line->data,plainTextEditor_textView);
 		}
 		else if(  strcmp(lineType,advancedJobFragmentName) == 0 )
 		{
-			string = advancedCronJobToString(line->data,string);
+			advancedCronJob2Text(line->data,plainTextEditor_textView);
 		}
 		else
 		{
 			displayError("Error: the following widget could not be converted to string",lineType);
-			markErrorInLine(line->data); // TODO;
+			markErrorInLine(line); // TODO;
 		}
 	}
-	return string;
+}
+
+void plain2extended(void* context)
+{
+	context_base* ctx = (context_base*)context;
+	GtkWidget *textView = get_plainTextEditor_textView_from_notebook(ctx->notebook);
+	GtkTextBuffer *buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW(textView));
+	GtkTextIter start_iter;
+	GtkTextIter end_iter;
+	gtk_text_buffer_get_start_iter (buffer, &start_iter);
+	gtk_text_buffer_get_end_iter (buffer, &end_iter);
+	const gchar* string = gtk_text_buffer_get_text (buffer, &start_iter,&end_iter, TRUE);
+//	printf("string: %s\n",string);
+//	printf("sizeof(string): %i\n",strlen(string));
+	if( strlen(string) < 1)
+		return;
+
+	char* tempfile;
+	char filePathBuff[1024];
+	memset(filePathBuff,0,sizeof(filePathBuff));
+	int* fd = -1;
+
+	const char* SYSTEM_D_TEMP_FOLDER_VAR = "XDG_RUNTIME_DIR";
+	const char* DEFAULT_TEMP_FOLDER = "/tmp";
+	char* systemDTemp = getenv(SYSTEM_D_TEMP_FOLDER_VAR);
+	if(systemDTemp)
+	{
+		strncpy(filePathBuff,systemDTemp,strlen(systemDTemp));
+		strcat(filePathBuff,"/");
+		strcat(filePathBuff,TEMP_FILE_NAME_TEMPLATE);
+		fd = mkstemp(filePathBuff);
+	}
+	else
+	{
+		strncpy(filePathBuff,DEFAULT_TEMP_FOLDER,strlen(DEFAULT_TEMP_FOLDER));
+		strcat(filePathBuff,"/");
+		strcat(filePathBuff,TEMP_FILE_NAME_TEMPLATE);
+		fd = mkstemp(filePathBuff);
+	}
+	errno = 0;
+	unlink(filePathBuff); // whenever the file or the program is closed, the file is deleted.
+	if(fd < 1)
+	{
+		displayError("Creation of temp file failed with error: ",strerror(errno));
+		return;
+	}
+
+	FILE* fp = fdopen(fd, "w+");
+	if(-1 == fprintf(fp,"%s",string))
+	{
+		printf("\n write failed with error [%s]\n",strerror(errno));
+		return;
+	}
+
+	rewind(fp);
+	extendedEditor_linebox_clear(get_extendedEditor_linebox_from_notebook(ctx->notebook));
+	read_cron_tab(ctx,fp);
+	fclose(fp);
 }

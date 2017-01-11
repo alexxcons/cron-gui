@@ -16,7 +16,7 @@ CFLAGS += -DDEBIAN=1
 #HEADERS = cron_gui.h readCrontab.h
 # files to work with:
 SOURCES_CRON = pkg-cron/entry.c pkg-cron/env.c pkg-cron/misc.c
-SOURCES_BASE = readCrontab.c writeCrontab.c wizard.c cron_gui.c
+SOURCES_BASE = readCrontab.c wizard.c cron_gui.c config_gui_base.c
 SOURCES_PROD = main.c
 SOURCES_TEST = test.c
 TARGET =	cron-gui

@@ -3,22 +3,22 @@ Must Have:
 Prio 1 - display all kind of error in the statusbar
 
 - as well safe wrong stuff to file ( possibility to safe invalid files )
-- save currently open tab ( text mode or extended mode )
-
-- extra-tab to modify text ( plain editor vs. extended editor )
--- as well should provide line numbers
--- copy left to right / right to left on tab-switch
--- validate on tab-switch
+- save currently open tab ( text mode or extended mode ) --- TODO fix saveing !
+- add line numbers to textview
+- same space for all line-numbers
+- 
+- rename packages: crontab-gui + config-gui-base
 
 - display filename 
 
 - correct window-size on start
 - validate wizard-value when typed
-- validate whole file when wizard finished and after load
+- validate whole file when wizard finished and after load / tab-switch
 - check that string-size is not exceeded ( use expandString as much as possible ) 
 - use automake
 
 - separate config-gui-base from cron-gui
+- add examples for lightdm, fstab
 
 Planned Features:
 - build patch for step-size stuff in crontab: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=830821

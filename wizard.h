@@ -23,6 +23,8 @@ typedef enum { MINUTE, HOUR, DOM, MONTH, DOW } wizardType;
 
 struct wizardContext;
 
+struct wizard_launch_context;
+
 // returns null on success
 void runWizard( wizardType type, GtkWindow *main_window, GtkWidget *pressedButton);
 

@@ -20,7 +20,6 @@
 #include <gtk/gtk.h>
 
 #define	MAX_AT_STRING	10	/* Actually the maximum is 9 characters: @monthly  */
-extern int verboseMode;
 
 void check_error(	char	*msg);
 
@@ -35,7 +34,6 @@ void entryToString(entry *e, char* string);
 void bitStrToString(bitstr_t* bitstr, char* string, unsigned int max,char *labels[]);
 void rangeToString(char range[60][4] , char* string, unsigned int* rangeIndex, int* commaNeededOnNextRange);
 
-int read_cron_tab_plainTextEditor(GtkWidget *plainTextEditor_entry,const char* fileToLoad);
-int read_cron_tab(GtkWidget *extendedEditor_linebox,const char* fileToLoad);
+int read_cron_tab(void* context,FILE* crontab);
 
 #endif //READ_CRONTAB_H

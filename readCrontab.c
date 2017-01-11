@@ -14,6 +14,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <readCrontab.h>
+#include <cron_gui.h>
 #include <stdio.h>
 
 static	int		CheckErrorCount = 0;
@@ -173,14 +174,14 @@ void entryToString(entry *e, char* string)
 	commandOfEntryToString(e,string);
 }
 
-void entryToFragment(entry *e, GtkWidget *extendedEditor_linebox)
+void entryToFragment(entry *e, context_base* context)
 {
 	char atString[MAX_AT_STRING] = "\0";
 	if(appendIf_At(e,atString))
 	{
 		char command[MAX_COMMAND] = "\0";
 		commandOfEntryToString(e,command);
-		addSimpleCronJob(extendedEditor_linebox,atString,command );
+		addSimpleCronJob(atString,command, context );
 	}
 	else
 	{
@@ -196,7 +197,7 @@ void entryToFragment(entry *e, GtkWidget *extendedEditor_linebox)
 		monthOfEntryToString(e,month);
 		dowOfEntryToString(e,dow);
 		commandOfEntryToString(e,command);
-		addAdvancedCronJob(extendedEditor_linebox,minute,hour,dom,month,dow,command);
+		addAdvancedCronJob(minute,hour,dom,month,dow,command, context);
 	}
 
 }
@@ -387,7 +388,9 @@ void rangeToString(char range[60][4] , char* string, unsigned int* rangeIndex, i
 
 int get_comment(FILE *file, char *comment, int comment_size_max)
 {
+	printf("get_comment 1\n");
 	long	filepos = ftell(file);
+	printf("get_comment 2\n");
 	int isComment = FALSE;
 	int	ch;
 	while (EOF != (ch = get_char(file)))
@@ -420,82 +423,42 @@ int get_comment(FILE *file, char *comment, int comment_size_max)
 	}
 }
 
-void get_leading_comments(FILE *crontab, GtkWidget *extendedEditor_linebox)
+void get_leading_comments(FILE *crontab, context_base* context)
 {
 	char comment[MAX_ENVSTR];
 	int commentFound = TRUE;
 	while( commentFound )
 	{
+		printf("get_leading_comments 1\n");
 		commentFound = get_comment(crontab,comment,MAX_ENVSTR);
+		printf("get_leading_comments 2\n");
 		if( commentFound )
 		{
-			addCommentOrVariable(extendedEditor_linebox,comment);
+			printf("get_leading_comments 3\n");
+			addCommentOrVariable(comment, context);
+			printf("get_leading_comments 4\n");
 			printf("%s\n",comment );
+			printf("get_leading_comments 5\n");
 		}
 	}
 
 }
 
-int read_cron_tab_plainTextEditor(GtkWidget *plainTextEditor_entry,const char* fileToLoad)
+int read_cron_tab(void* context,FILE* crontab)
 {
-	if( verboseMode )
-	{
-		printf("Attempt to open file:\n");
-		printf("%s\n",fileToLoad);
-	}
-
-	gchar *contents;
-	GError *err = NULL;
-
-	g_file_get_contents (fileToLoad, &contents, NULL, &err);
-	g_assert ((contents == NULL && err != NULL) || (contents != NULL && err == NULL));
-	if (err != NULL)
-	  {
-	    // Report error to user, and free error
-	    g_assert (contents == NULL);
-	    fprintf(stderr, "Failed to open file '%s' : %s\n", fileToLoad, err->message);
-	    g_error_free (err);
-	  }
-	else
-	  {
-	    // Use file contents
-	    g_assert (contents != NULL);
-	    gtk_entry_set_text (plainTextEditor_entry,contents);
-	  }
-	return (0);
-}
-
-// TODO:
-// Only way to do checks is, by using a filedescriptor
-// So switching between tabs should lead to:
-// 1. dump to temp file
-// 2. read temp file with fd
-
-
-int read_cron_tab(GtkWidget *extendedEditor_linebox,const char* fileToLoad)
-{
+	context_base* ctx = (context_base*)context;
 	entry	*e;
 	int eof = FALSE;
 	char envstr[MAX_ENVSTR];
 	char	**envp = env_init();
 	static	struct passwd	pw;
-	if( verboseMode )
-	{
-		printf("Attempt to open file:\n");
-		printf("%s\n",fileToLoad);
-	}
-	FILE * crontab = fopen(fileToLoad, "r");
-	if (!crontab)
-	{
-		fprintf(stderr, "Failed to open file '%s' : %s\n", fileToLoad, strerror(errno));
-		return (-2);
-	}
 
 	CheckErrorCount = 0;
 
 	while (!CheckErrorCount && !eof)
 	{
-		get_leading_comments(crontab,extendedEditor_linebox);
+		get_leading_comments(crontab,ctx);
+		printf("read_cron_tab 1\n");
 		switch (load_env(envstr, crontab))
 		{
 			case ERR:
@@ -505,14 +468,14 @@ int read_cron_tab(GtkWidget *extendedEditor_linebox,const char* fileToLoad)
 				e = load_entry(crontab, check_error, &pw, envp);
 				char string[MAX_COMMAND] = "\0";
 				entryToString(e,string);
-				entryToFragment(e,extendedEditor_linebox);
+				entryToFragment(e,ctx);
 				printf("Cronjob: %s\n",string );
 				if (e)
 					free(e);
 				break;
 			case TRUE:
 				printf("environment var: %s\n",envstr );
-				addCommentOrVariable(extendedEditor_linebox, envstr);
+				addCommentOrVariable(envstr,ctx);
 				break;
 		}
 	}
@@ -520,14 +483,7 @@ int read_cron_tab(GtkWidget *extendedEditor_linebox,const char* fileToLoad)
 	if (CheckErrorCount != 0)
 	{
 		fprintf(stderr, "errors in crontab file, can't load.\n");
-		fclose(crontab);
 		return (-1);
-	}
-
-
-	if (fclose(crontab) == EOF) {
-		perror("fclose");
-		return (-2);
 	}
 	return (0);
 }

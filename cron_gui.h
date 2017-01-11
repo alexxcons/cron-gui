@@ -17,68 +17,25 @@
 #define CRON_GUI_H
 
 #include <gtk/gtk.h>
-#include "wizard.h"
+#include <wizard.h>
+#include <config_gui_base.h>
 
-GtkWindow *main_window;
-
-void fixLineNumbers(GtkWidget *mainTable);
-
-GtkWidget* addDragDropButton(GtkWidget *box, GtkWidget *mainTable );
-void addSimpleCronJob(GtkWidget *mainTable, const char *simpleSelector, const char *command);
-void addAdvancedCronJob(GtkWidget *mainTable, const char *minute, const char *hour, const char *dom, const char *month, const char *dow, const char *command);
-void addCommentOrVariable(GtkWidget *mainTable, const char *text);
+void addSimpleCronJob(const char *simpleSelector, const char *command, context_base* context);
+void addAdvancedCronJob(const char *minute, const char *hour, const char *dom, const char *month, const char *dow, const char *command, context_base* context);
+void addCommentOrVariable(const char *text, context_base* context);
 
 void initSizeGroups();
 
 void activate_main_gui(GtkApplication *app, const char* fileToLoad );
 
-// called when window is closed
-void on_main_window_destroy();
+void on_time_selector_pressed(GtkWidget *button, context_base* context);
 
-void on_time_selector_pressed(GtkWidget *button, wizardType type);
+void on_add_comment(GtkWidget *source, context_base* context );
+void on_add_simple_job(GtkWidget *source, context_base* context );
+void on_add_advanced_job(GtkWidget *source, context_base* context );
 
-void on_add_comment(GtkWidget *source, GtkWidget *mainTable );
-void on_add_simple_job(GtkWidget *source, GtkWidget *mainTable );
-void on_add_advanced_job(GtkWidget *source, GtkWidget *mainTable );
+void extended2plain(void* context);
+void plain2extended(void* context);
 
-void on_menu_new(GtkWidget *menuItem, GtkWidget *mainTable );
-void on_menu_open(GtkWidget *menuItem, GtkWidget *mainTable );
-void on_menu_save(GtkWidget *menuItem, GtkWidget *mainTable );
-void on_menu_save_as(GtkWidget *menuItem, GtkWidget *mainTable );
-void on_menu_close(GtkWidget *menuItem, GtkWidget *mainTable );
-void on_menu_copy(GtkWidget *menuItem, GtkWidget *mainTable );
-void on_menu_paste(GtkWidget *menuItem, GtkWidget *mainTable );
-void on_menu_index(GtkWidget *menuItem, GtkWidget *mainTable );
-void on_menu_about(GtkWidget *menuItem, GtkWidget *mainTable );
-
-gboolean on_drag_drop (GtkWidget      *widget,
-               GdkDragContext *context,
-               gint            x,
-               gint            y,
-               guint           time,
-               GtkWidget *mainTable);
-gboolean on_drag_motion(GtkWidget      *widget,
-        GdkDragContext *context,
-        gint            x,
-        gint            y,
-        guint           time,GtkWidget *box);
-void on_drag_data_received(GtkWidget        *widget,
-        GdkDragContext   *context,
-        gint              x,
-        gint              y,
-        GtkSelectionData *data,
-        guint             info,
-        guint             time,GtkWidget *box);
-void on_drag_data_get(GtkWidget *widget, GdkDragContext *context,GtkWidget *box);
-
-void on_drag_begin(GtkWidget *widget, GdkDragContext *context,GtkWidget *box);
-void on_drag_end(GtkWidget *widget, GdkDragContext *context,GtkWidget *box);
-
-void on_switch_page_main_gui(GtkNotebook *notebook, GtkWidget *page,guint page_num, GtkWidget *main_box );
-
-char* extendedEditorToString(GtkWidget *mainTable);
-
-GtkWidget* get_extendedEditor_linebox_from_notebook(GtkWidget* notebook);
-GtkWidget* get_plainTextEditor_entry_from_notebook(GtkWidget* notebook);
 
 #endif //CRON_GUI_H
