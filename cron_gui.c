@@ -279,12 +279,7 @@ void plain2extended(void* context)
 {
 	context_base* ctx = (context_base*)context;
 	GtkWidget *textView = get_plainTextEditor_textView_from_notebook(ctx->notebook);
-	GtkTextBuffer *buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW(textView));
-	GtkTextIter start_iter;
-	GtkTextIter end_iter;
-	gtk_text_buffer_get_start_iter (buffer, &start_iter);
-	gtk_text_buffer_get_end_iter (buffer, &end_iter);
-	const gchar* string = gtk_text_buffer_get_text (buffer, &start_iter,&end_iter, TRUE);
+	const gchar* string = plainTextEditor_textView_asString(textView);
 //	printf("string: %s\n",string);
 //	printf("sizeof(string): %i\n",strlen(string));
 	if( strlen(string) < 1)

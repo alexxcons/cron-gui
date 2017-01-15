@@ -151,6 +151,16 @@ void extendedEditor_linebox_clear(GtkWidget* extendedEditor_linebox)
 	g_list_free(lines);
 }
 
+const char* plainTextEditor_textView_asString(GtkWidget* plainTextEditor_textView)
+{
+	GtkTextBuffer *buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW(plainTextEditor_textView));
+	GtkTextIter start_iter;
+	GtkTextIter end_iter;
+	gtk_text_buffer_get_start_iter (buffer, &start_iter);
+	gtk_text_buffer_get_end_iter (buffer, &end_iter);
+	return gtk_text_buffer_get_text (buffer, &start_iter,&end_iter, TRUE);
+}
+
 void plainTextEditor_textView_append(GtkWidget* plainTextEditor_textView, const gchar* text)
 {
 	const size_t len = strlen(text);
@@ -417,7 +427,9 @@ void loadFile( context_base* context, const char* fileToLoad)
 	}
 
 	printf("loadFile 2\n");
+
 	GtkWidget* plainTextEditor_textView = get_plainTextEditor_textView_from_notebook(context->notebook);
+	plainTextEditor_textView_clear(plainTextEditor_textView);
 	GtkTextBuffer *buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW(plainTextEditor_textView));
 	printf("loadFile 3\n");
 	GtkTextIter end_iter;
@@ -448,7 +460,7 @@ void loadFile( context_base* context, const char* fileToLoad)
 
 }
 
-int saveFile(char* fileToWrite, const gchar* stringToSave, context_base* context)
+int saveFile(char* fileToWrite, context_base* context)
 {
 	if( context->verboseMode )
 	{
@@ -461,8 +473,15 @@ int saveFile(char* fileToWrite, const gchar* stringToSave, context_base* context
 		printf("Failed to open file '%s' : %s\n", fileToWrite, strerror(errno));
 		return (-2);
 	}
-	fprintf(file, "%s\n", stringToSave);
+	if(gtk_notebook_get_current_page (GTK_NOTEBOOK(context->notebook)) == NOTEBOOK_POS_EXTENDED_EDITOR )
+	{
+		context->cb_extended2plain(context);
+	}
+	GtkWidget *textView = get_plainTextEditor_textView_from_notebook(context->notebook);
+	const gchar* string = plainTextEditor_textView_asString(textView);
+	fprintf(file, "%s\n", plainTextEditor_textView_asString(textView));
 	fclose(file);
+	context->filePathCurrentlyLoaded = strdup(fileToWrite);
 	return 0;
 }
 
@@ -494,13 +513,8 @@ void on_menu_save(GtkWidget *menuItem, context_base* context )
 		displayError("No file loaded",""); // TODO: grayed out if no file loaded
 		return;
 	}
-	if(gtk_notebook_get_current_page (GTK_NOTEBOOK(context->notebook)) == NOTEBOOK_POS_EXTENDED_EDITOR )
-	{
-		context->cb_extended2plain(context);
-	}
-	GtkWidget *textView = get_plainTextEditor_textView_from_notebook(context->notebook);
-	const gchar* string = gtk_entry_get_text (GTK_TEXT_VIEW(textView));
-	if(!saveFile(context->filePathCurrentlyLoaded,string, context))
+
+	if(!saveFile(context->filePathCurrentlyLoaded, context))
 	{
 		displayInfo("successfully saved file:", context->filePathCurrentlyLoaded);
 	}
@@ -508,11 +522,6 @@ void on_menu_save(GtkWidget *menuItem, context_base* context )
 
 void on_menu_save_as(GtkWidget *menuItem, context_base* context )
 {
-	if( context->filePathCurrentlyLoaded == NULL )
-	{
-		displayError("No file loaded",""); // TODO: grayed out if no file loaded
-		return;
-	}
 	GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_SAVE;
 	GtkWidget *dialog = gtk_file_chooser_dialog_new ("Save File as",context->main_window,action,"_Cancel",GTK_RESPONSE_CANCEL,"_Save",GTK_RESPONSE_ACCEPT,NULL);
 	gint res = gtk_dialog_run (GTK_DIALOG (dialog));
@@ -521,14 +530,7 @@ void on_menu_save_as(GtkWidget *menuItem, context_base* context )
 		char *filename;
 		GtkFileChooser *chooser = GTK_FILE_CHOOSER (dialog);
 		filename = gtk_file_chooser_get_filename (chooser);
-
-		if(gtk_notebook_get_current_page (GTK_NOTEBOOK(context->notebook)) == NOTEBOOK_POS_EXTENDED_EDITOR )
-		{
-			context->cb_extended2plain(context);
-		}
-		GtkWidget *entry = get_plainTextEditor_textView_from_notebook(context->notebook);
-		const gchar* string = gtk_entry_get_text (GTK_ENTRY(entry));
-		if(!saveFile(filename,string, context))
+		if(!saveFile(filename, context))
 		{
 			displayInfo("successfully saved file:", filename);
 		}
