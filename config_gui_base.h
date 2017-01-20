@@ -20,6 +20,7 @@
 
 typedef char* (*concrete_gui_callback_transform)(void* context);
 typedef int (*concrete_gui_callback_validate)(const char* string,char* error);
+typedef void (*cb_activate_main_gui)(GtkApplication *app, const char* fileToLoad);
 
 typedef struct
 {
@@ -27,6 +28,7 @@ typedef struct
 	GtkSizeGroup* sizeGroupLineNumbers;
 	GtkWindow *main_window;
 	GtkWidget *window;
+	char* fileToLoadAtStartup;
 	char* filePathCurrentlyLoaded;
 	int verboseMode;
 	concrete_gui_callback_transform		cb_extended2plain;
@@ -36,13 +38,15 @@ typedef struct
 } context_base;
 
 
+void initContext(context_base* context);
+
 void fixLineNumbers(GtkWidget *mainTable);
 
 GtkWidget* addDragDropButton(GtkWidget *box, GtkWidget *mainTable );
 
 void initSizeGroupsBase(context_base* context);
 
-void activate_main_gui_base(GtkApplication *app, const char* fileToLoad, context_base* context);
+void activate_main_gui_base(GtkApplication *app, context_base* context);
 
 // called when window is closed
 void on_main_window_destroy();
@@ -91,5 +95,9 @@ const char* plainTextEditor_textView_asString(GtkWidget* plainTextEditor_textVie
 void plainTextEditor_textView_append(GtkWidget* plainTextEditor_textView, const gchar* text);
 
 void extendedEditorCommentLine2Text(GtkWidget *commentLine, GtkWidget *plainTextEditor_textView);
+
+void print_help(char* progName);
+void parse_arguments(int argc, char	*argv[],context_base* context);
+int main_base(int argc, char *argv[], const char* applicationName, cb_activate_main_gui callback);
 
 #endif //CONFIG_GUI_BASE_H

@@ -26,7 +26,7 @@ void addCommentOrVariable(const char *text, context_base* context);
 
 void initSizeGroups();
 
-void activate_main_gui(GtkApplication *app, const char* fileToLoad );
+void activate_main_gui(GtkApplication *app, context_base* context );
 
 void on_time_selector_pressed(GtkWidget *button, context_base* context);
 

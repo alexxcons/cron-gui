@@ -57,30 +57,30 @@ void add_toolbar_item(const context_base* context, const char* actionName, const
 	g_signal_connect(G_OBJECT(toolbarItem), "clicked", G_CALLBACK(callback), parameter);
 }
 
-void activate_main_gui(GtkApplication *app, const char* fileToLoad)
+void activate_main_gui(GtkApplication *app, context_base* context)
 {
 	printf("activate_main_gui 1\n");
-	context_base context;
-	context.cb_extended2plain = extended2plain;
-	context.cb_plain2extended = plain2extended;
-	context.gui_specific_data = malloc(sizeof(wizardType));
-	activate_main_gui_base(app,fileToLoad, &context);
-	add_toolbar_item(&context, "Add Simple Job", on_add_simple_job, &context);
-	add_toolbar_item(&context, "Add Advanced Job", on_add_advanced_job, &context);
-	add_toolbar_item(&context, "Add Comment", on_add_comment, &context);
+
+	context->cb_extended2plain = extended2plain;
+	context->cb_plain2extended = plain2extended;
+	context->gui_specific_data = malloc(sizeof(wizardType));
+	activate_main_gui_base(app, context);
+	add_toolbar_item(context, "Add Simple Job", on_add_simple_job, context);
+	add_toolbar_item(context, "Add Advanced Job", on_add_advanced_job, context);
+	add_toolbar_item(context, "Add Comment", on_add_comment, context);
 	printf("activate_main_gui 2\n");
-	gtk_widget_show_all (context.window);
+	gtk_widget_show_all (context->window);
 	printf("activate_main_gui 3\n");
-	initSizeGroupsBase(&context);
+	initSizeGroupsBase(context);
 	initSizeGroups();
 	printf("activate_main_gui 4\n");
-	if( fileToLoad == NULL)
+	if( context->fileToLoadAtStartup == NULL)
 	{
 		displayInfo("No file selected - attempt to load default crontab from",DEFAULT_CRONTAB_PATH);
-		fileToLoad = strdup(DEFAULT_CRONTAB_PATH);
+		context->fileToLoadAtStartup = strdup(DEFAULT_CRONTAB_PATH);
 	}
 	printf("activate_main_gui 5\n");
-	loadFile(&context,fileToLoad);
+	loadFile(context,context->fileToLoadAtStartup);
 	printf("activate_main_gui 6\n");
 	gtk_main();
 }

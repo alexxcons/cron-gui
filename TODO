@@ -3,13 +3,14 @@ Must Have:
 Prio 1 - display all kind of error in the statusbar
 
 - as well safe wrong stuff to file ( possibility to safe invalid files )
-- save currently open tab ( text mode or extended mode ) --- TODO fix saveing !
 - add line numbers to textview
 - same space for all line-numbers
 - 
-- rename packages: crontab-gui + config-gui-base
+- bug: application-arguments: verbose gleichzeitig mit pass filename 
 
-- display filename 
+- rename packages: crontab-gui + config-gui-base
+- full support for verbose mode
+- display filename
 
 - correct window-size on start
 - validate wizard-value when typed

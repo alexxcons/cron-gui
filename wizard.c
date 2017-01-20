@@ -14,7 +14,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "wizard.h"
-#include "readCrontab.h"
+#include <readCrontab.h>
 
 #include <stdio.h>
 #include <string.h>
