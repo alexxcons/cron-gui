@@ -12,7 +12,6 @@ Prio 1 - display all kind of error in the statusbar
 - full support for verbose mode
 - display filename
 
-- correct window-size on start
 - validate wizard-value when typed
 - validate whole file when wizard finished and after load / tab-switch
 - check that string-size is not exceeded ( use expandString as much as possible ) 

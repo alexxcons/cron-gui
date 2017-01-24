@@ -136,6 +136,10 @@ void addSimpleCronJob(const char *simpleSelector, const char *command, context_b
 	setDragDestination(extendedEditor_linebox, commandBox);
 	gtk_entry_set_text(GTK_ENTRY(commandBox),command);
 	gtk_widget_set_hexpand (commandBox,TRUE);
+	guint16 textLength = gtk_entry_get_text_length(commandBox);
+	gtk_entry_set_width_chars (commandBox,textLength);
+	g_signal_connect (commandBox, "changed", G_CALLBACK (on_entry_changed), context);
+
 	addDragDropButton(box,extendedEditor_linebox);
 	gtk_widget_show_all (box);
 }
@@ -186,6 +190,9 @@ void addAdvancedCronJob(const char *minute, const char *hour, const char *dom, c
 	gtk_container_add (GTK_CONTAINER (box), commandBox);
 	gtk_entry_set_text(GTK_ENTRY(commandBox),command);
 	gtk_widget_set_hexpand (commandBox,TRUE);
+	guint16 textLength = gtk_entry_get_text_length(commandBox);
+	gtk_entry_set_width_chars (commandBox,textLength);
+	g_signal_connect (commandBox, "changed", G_CALLBACK (on_entry_changed), context);
 
 	addDragDropButton(box,extendedEditor_linebox);
 	gtk_widget_show_all (box);
@@ -242,6 +249,12 @@ void on_add_advanced_job(GtkWidget *source, context_base* context )
 void on_time_selector_pressed(GtkWidget *button, context_base* context)
 {
 	runWizard( context->main_window, button);
+}
+
+void on_entry_changed (GtkEditable* entry, context_base* context)
+{
+	guint16 textLength = gtk_entry_get_text_length(GTK_ENTRY(entry));
+	gtk_entry_set_width_chars (GTK_ENTRY(entry),textLength);
 }
 
 void extended2plain(void* context)

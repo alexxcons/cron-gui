@@ -33,6 +33,7 @@ void on_time_selector_pressed(GtkWidget *button, context_base* context);
 void on_add_comment(GtkWidget *source, context_base* context );
 void on_add_simple_job(GtkWidget *source, context_base* context );
 void on_add_advanced_job(GtkWidget *source, context_base* context );
+void on_entry_changed (GtkEditable* entry, context_base* context);
 
 void extended2plain(void* context);
 void plain2extended(void* context);
