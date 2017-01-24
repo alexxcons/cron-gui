@@ -94,7 +94,7 @@ void addCommentOrVariable(const char *text, context_base* context)
 	setDragDestination(extendedEditor_linebox, box);
 	gtk_container_add (GTK_CONTAINER (extendedEditor_linebox), box);
 
-	addLineNumber(extendedEditor_linebox,box);
+	addLineNumber(extendedEditor_linebox, box, context);
 
 	GtkWidget *textbox = gtk_entry_new();
 	setDragDestination(extendedEditor_linebox, textbox);
@@ -116,7 +116,7 @@ void addSimpleCronJob(const char *simpleSelector, const char *command, context_b
 	gtk_container_add (GTK_CONTAINER (extendedEditor_linebox), box);
 	setDragDestination(extendedEditor_linebox, box);
 
-	addLineNumber(extendedEditor_linebox,box);
+	addLineNumber(extendedEditor_linebox, box, context);
 
 	GtkWidget *timePicker = gtk_combo_box_text_new ();
 	gtk_container_add (GTK_CONTAINER (box), timePicker);
@@ -173,7 +173,7 @@ void addAdvancedCronJob(const char *minute, const char *hour, const char *dom, c
 	gtk_container_add (GTK_CONTAINER (extendedEditor_linebox), box);
 	setDragDestination(extendedEditor_linebox, box);
 
-	addLineNumber(extendedEditor_linebox,box);
+	addLineNumber(extendedEditor_linebox, box, context);
 
 	GtkWidget *buttons = gtk_box_new (GTK_ORIENTATION_HORIZONTAL,0);
 	gtk_container_add (GTK_CONTAINER (box), buttons);
@@ -254,6 +254,7 @@ void on_time_selector_pressed(GtkWidget *button, context_base* context)
 void on_entry_changed (GtkEditable* entry, context_base* context)
 {
 	guint16 textLength = gtk_entry_get_text_length(GTK_ENTRY(entry));
+	printf("%i\n",textLength);
 	gtk_entry_set_width_chars (GTK_ENTRY(entry),textLength);
 }
 

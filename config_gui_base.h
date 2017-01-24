@@ -39,7 +39,7 @@ typedef struct
 
 
 void initContext(context_base* context);
-
+void addLineNumber(GtkWidget *extendedEditor_linebox,GtkWidget *lineBox, context_base* context);
 void fixLineNumbers(GtkWidget *mainTable);
 
 GtkWidget* addDragDropButton(GtkWidget *box, GtkWidget *mainTable );

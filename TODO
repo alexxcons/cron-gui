@@ -4,7 +4,6 @@ Prio 1 - display all kind of error in the statusbar
 
 - as well safe wrong stuff to file ( possibility to safe invalid files )
 - add line numbers to textview
-- same space for all line-numbers
 - 
 - bug: application-arguments: verbose gleichzeitig mit pass filename 
 

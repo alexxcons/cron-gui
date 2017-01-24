@@ -38,8 +38,6 @@ const gint nTargetEntries = 3;
 const int NOTEBOOK_POS_EXTENDED_EDITOR	= 0;
 const int NOTEBOOK_POS_SIMPLE_EDITOR	= 1;
 
-static GtkSizeGroup * sizeGroupLineNumbers = NULL;
-
 GtkWidget *editMenu = NULL;
 
 void initContext(context_base* context)
@@ -112,12 +110,17 @@ char* expandString(char *string, const char *stringToAdd)
     return newBuffer;
 }
 
-void addLineNumber(GtkWidget *extendedEditor_linebox,GtkWidget *lineBox)
+void addLineNumber(GtkWidget *extendedEditor_linebox,GtkWidget *lineBox, context_base* context)
 {
+	printf("debug1\n");
 	GtkWidget *lineNumberLabel = gtk_label_new ("");
+	printf("debug2\n");
 	gtk_container_add (GTK_CONTAINER (lineBox), lineNumberLabel);
-	gtk_size_group_add_widget (sizeGroupLineNumbers,lineNumberLabel);
+	printf("debug3\n");
+	gtk_size_group_add_widget (context->sizeGroupLineNumbers,lineNumberLabel);
+	printf("debug4\n");
 	fixLineNumbers(extendedEditor_linebox);
+	printf("debug5\n");
 }
 
 void setDragDestination(GtkWidget *extendedEditor_linebox, GtkWidget *widget)
