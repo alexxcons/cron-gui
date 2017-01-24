@@ -63,7 +63,6 @@ void activate_main_gui(GtkApplication *app, context_base* context)
 
 	context->cb_extended2plain = extended2plain;
 	context->cb_plain2extended = plain2extended;
-	context->gui_specific_data = malloc(sizeof(wizardType));
 	activate_main_gui_base(app, context);
 	add_toolbar_item(context, "Add Simple Job", on_add_simple_job, context);
 	add_toolbar_item(context, "Add Advanced Job", on_add_advanced_job, context);
@@ -154,12 +153,11 @@ void simpleCronJob2Text(GtkWidget *simpleCronJob, GtkWidget *plainTextEditor_tex
 	plainTextEditor_textView_append(plainTextEditor_textView,"\n");
 }
 
-void addTimeSelectorButton(GtkWidget *buttonBox, int type, const char* value, context_base* context )
+void addTimeSelectorButton(GtkWidget *buttonBox, const gchar *name, const char* value, context_base* context )
 {
 	GtkWidget *button = gtk_button_new_with_label (value);
 	gtk_container_add (GTK_CONTAINER (buttonBox), button);
-	wizardType* extraData = (wizardType*)context->gui_specific_data;
-	*extraData = type;
+	gtk_widget_set_name (button, name);
 	g_signal_connect (button, "clicked", G_CALLBACK (on_time_selector_pressed), context);
 }
 
@@ -177,11 +175,11 @@ void addAdvancedCronJob(const char *minute, const char *hour, const char *dom, c
 	gtk_container_add (GTK_CONTAINER (box), buttons);
 	gtk_size_group_add_widget (sizeGroupTimePickerBox,buttons);
 
-	addTimeSelectorButton(buttons,MINUTE,minute, context);
-	addTimeSelectorButton(buttons,HOUR,hour, context);
-	addTimeSelectorButton(buttons,DOM,dom, context);
-	addTimeSelectorButton(buttons,MONTH,month, context);
-	addTimeSelectorButton(buttons,DOW,dow, context);
+	addTimeSelectorButton(buttons,buttonName[MINUTE],minute, context);
+	addTimeSelectorButton(buttons,buttonName[HOUR],hour, context);
+	addTimeSelectorButton(buttons,buttonName[DOM],dom, context);
+	addTimeSelectorButton(buttons,buttonName[MONTH],month, context);
+	addTimeSelectorButton(buttons,buttonName[DOW],dow, context);
 
 	GtkWidget *commandBox = gtk_entry_new();
 	setDragDestination(extendedEditor_linebox, commandBox);
@@ -243,7 +241,7 @@ void on_add_advanced_job(GtkWidget *source, context_base* context )
 
 void on_time_selector_pressed(GtkWidget *button, context_base* context)
 {
-	runWizard( *(wizardType*)(context->gui_specific_data), context->main_window, button);
+	runWizard( context->main_window, button);
 }
 
 void extended2plain(void* context)

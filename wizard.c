@@ -24,8 +24,6 @@ const guint PAGE_1_EVERY_X = 0;
 const guint PAGE_2_EVERY_N_X = 1;
 const guint PAGE_3_EACH_SELECTED_X = 2;
 
-char *windowTitle[] = { "Select Minutes", "Select Hours", "Select Days of Month", "Select Months", "Select Day of Week" };
-
 char *tabNames[][5] = {
 						{ "every minute", "every n minutes", "each selected minute"},
 						{ "every hour", "every n hours", "each selected hour"},
@@ -57,13 +55,32 @@ struct wizardContext
 	wizardType type;
 };
 
-void runWizard( wizardType type, GtkWindow *main_window, GtkWidget *pressedButton )
+wizardType wizardName2wizardType( const char* name )
+{
+	if( strcmp(name,buttonName[MINUTE]) == 0 )
+		return MINUTE;
+	else if ( strcmp(name,buttonName[HOUR]) == 0 )
+		return HOUR;
+	else if ( strcmp(name,buttonName[DOM]) == 0 )
+		return DOM;
+	else if ( strcmp(name,buttonName[MONTH]) == 0 )
+		return MONTH;
+	else if ( strcmp(name,buttonName[DOW]) == 0 )
+		return DOW;
+	else
+		{
+			printf("Fatal Error. Unknown buttonName: '%s' . Will exit now\n", name);
+			exit(1);
+		}
+}
+
+void runWizard( GtkWindow *main_window, GtkWidget *pressedButton )
 {
 	struct wizardContext context;
-	context.type = type;
+	context.type = wizardName2wizardType(gtk_widget_get_name (pressedButton));
 
 	GtkDialogFlags flags = GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT;
-	GtkWidget *wizard = gtk_dialog_new_with_buttons (windowTitle[type],main_window,flags,"_OK", GTK_RESPONSE_ACCEPT, "_Cancel", GTK_RESPONSE_REJECT, NULL);
+	GtkWidget *wizard = gtk_dialog_new_with_buttons (buttonName[context.type],main_window,flags,"_OK", GTK_RESPONSE_ACCEPT, "_Cancel", GTK_RESPONSE_REJECT, NULL);
 	gtk_window_set_transient_for (GTK_WINDOW(wizard),main_window);
 	GtkWidget *content_area = gtk_dialog_get_content_area (GTK_DIALOG (wizard));
 
@@ -77,15 +94,15 @@ void runWizard( wizardType type, GtkWindow *main_window, GtkWidget *pressedButto
 	context.timeRule =  gtk_entry_new();
 	gtk_container_add (GTK_CONTAINER (box), context.timeRule);
 
-	context.scaler = gtk_scale_new_with_range (GTK_ORIENTATION_HORIZONTAL, scalerLimits[type][0],scalerLimits[type][1],scalerLimits[type][2]);
+	context.scaler = gtk_scale_new_with_range (GTK_ORIENTATION_HORIZONTAL, scalerLimits[context.type][0],scalerLimits[context.type][1],scalerLimits[context.type][2]);
 	g_signal_connect (context.scaler, "value-changed", G_CALLBACK(on_move_scaler), &context);
 
 	context.grid = GTK_GRID(gtk_grid_new());
 	gtk_grid_set_row_homogeneous (context.grid,TRUE);
 	gtk_grid_set_column_homogeneous (context.grid,TRUE);
-	int nRows = buttonMatrix[type][0];
-	int nColumns = buttonMatrix[type][1];
-	int nElements = buttonMatrix[type][2];
+	int nRows = buttonMatrix[context.type][0];
+	int nColumns = buttonMatrix[context.type][1];
+	int nElements = buttonMatrix[context.type][2];
 	for( int i= 0; i < nRows; i++ )
 		gtk_grid_insert_row (context.grid,0);
 	for( int j= 0; j < nColumns; j++ )
@@ -100,9 +117,9 @@ void runWizard( wizardType type, GtkWindow *main_window, GtkWidget *pressedButto
 			{
 				GtkWidget *toggleButton;
 
-				if( type == MONTH )
+				if( context.type == MONTH )
 					toggleButton = gtk_toggle_button_new_with_label (MonthNames[currentElement]);
-				else if( type == DOW )
+				else if( context.type == DOW )
 					toggleButton = gtk_toggle_button_new_with_label (DowNames[currentElement + 1]); // +1, because for compartibilty cron keeps sundays twice ( we want to start at monday)
 				else
 				{
@@ -123,9 +140,9 @@ void runWizard( wizardType type, GtkWindow *main_window, GtkWidget *pressedButto
 	gtk_widget_set_vexpand (notebook,TRUE);
 	gtk_container_add (GTK_CONTAINER (box), notebook);
 	GtkWidget * label = gtk_label_new("");
-	gtk_notebook_append_page (GTK_NOTEBOOK(notebook),label,gtk_label_new (tabNames[type][0]));
-	gtk_notebook_append_page (GTK_NOTEBOOK(notebook),context.scaler,gtk_label_new (tabNames[type][1]));
-	gtk_notebook_append_page (GTK_NOTEBOOK(notebook),GTK_WIDGET(context.grid),gtk_label_new (tabNames[type][2]));
+	gtk_notebook_append_page (GTK_NOTEBOOK(notebook),label,gtk_label_new (tabNames[context.type][0]));
+	gtk_notebook_append_page (GTK_NOTEBOOK(notebook),context.scaler,gtk_label_new (tabNames[context.type][1]));
+	gtk_notebook_append_page (GTK_NOTEBOOK(notebook),GTK_WIDGET(context.grid),gtk_label_new (tabNames[context.type][2]));
 	g_signal_connect (notebook, "switch-page", G_CALLBACK(on_switch_page), &context);
 	gtk_widget_show_all (wizard);
 	gint result = gtk_dialog_run (GTK_DIALOG (wizard));

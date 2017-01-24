@@ -19,6 +19,8 @@
 #include <gtk/gtk.h>
 
 
+static const char *buttonName[] = { "Select Minutes", "Select Hours", "Select Days of Month", "Select Months", "Select Day of Week" };
+
 typedef enum { MINUTE, HOUR, DOM, MONTH, DOW } wizardType;
 
 struct wizardContext;
@@ -26,7 +28,7 @@ struct wizardContext;
 struct wizard_launch_context;
 
 // returns null on success
-void runWizard( wizardType type, GtkWindow *main_window, GtkWidget *pressedButton);
+void runWizard( GtkWindow *main_window, GtkWidget *pressedButton);
 
 void on_switch_page(GtkNotebook *notebook, GtkWidget *page,guint page_num, struct wizardContext *context);
 
