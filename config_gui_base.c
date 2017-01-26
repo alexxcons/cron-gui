@@ -18,6 +18,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <gtksourceview/gtksource.h>
 
 #define ERROR_EXIT	1
 
@@ -112,15 +113,10 @@ char* expandString(char *string, const char *stringToAdd)
 
 void addLineNumber(GtkWidget *extendedEditor_linebox,GtkWidget *lineBox, context_base* context)
 {
-	printf("debug1\n");
 	GtkWidget *lineNumberLabel = gtk_label_new ("");
-	printf("debug2\n");
 	gtk_container_add (GTK_CONTAINER (lineBox), lineNumberLabel);
-	printf("debug3\n");
 	gtk_size_group_add_widget (context->sizeGroupLineNumbers,lineNumberLabel);
-	printf("debug4\n");
 	fixLineNumbers(extendedEditor_linebox);
-	printf("debug5\n");
 }
 
 void setDragDestination(GtkWidget *extendedEditor_linebox, GtkWidget *widget)
@@ -222,7 +218,8 @@ void activate_main_gui_base(GtkApplication *app, context_base* context)
 	gtk_notebook_set_tab_pos (GTK_NOTEBOOK(context->notebook),GTK_POS_BOTTOM);
 	gtk_container_add (GTK_CONTAINER (main_box), context->notebook);
 	gtk_notebook_append_page (GTK_NOTEBOOK(context->notebook),extendedEditor,gtk_label_new ("extended"));
-	GtkWidget * plainTextEditor_textView = gtk_text_view_new();
+	GtkWidget * plainTextEditor_textView = gtk_source_view_new();
+	gtk_source_view_set_show_line_numbers (GTK_SOURCE_VIEW(plainTextEditor_textView),TRUE);
 	gtk_notebook_append_page (GTK_NOTEBOOK(context->notebook),plainTextEditor_textView,gtk_label_new ("plain text"));
 	g_signal_connect (context->notebook, "switch-page", G_CALLBACK(on_switch_page_main_gui), context);
 
@@ -495,7 +492,6 @@ int saveFile(char* fileToWrite, context_base* context)
 		context->cb_extended2plain(context);
 	}
 	GtkWidget *textView = get_plainTextEditor_textView_from_notebook(context->notebook);
-	const gchar* string = plainTextEditor_textView_asString(textView);
 	fprintf(file, "%s\n", plainTextEditor_textView_asString(textView));
 	fclose(file);
 	context->filePathCurrentlyLoaded = strdup(fileToWrite);

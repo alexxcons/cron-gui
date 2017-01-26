@@ -3,8 +3,7 @@ Must Have:
 Prio 1 - display all kind of error in the statusbar
 
 - as well safe wrong stuff to file ( possibility to safe invalid files )
-- add line numbers to textview
-- 
+
 - bug: application-arguments: verbose gleichzeitig mit pass filename 
 
 - rename packages: crontab-gui + config-gui-base
@@ -18,15 +17,18 @@ Prio 1 - display all kind of error in the statusbar
 
 - separate config-gui-base from cron-gui
 - add examples for lightdm, fstab
+- Tooltips
+- fstab-gui, lightdm-gui
+- Multi Language
 
 Planned Features:
 - build patch for step-size stuff in crontab: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=830821
 
+- colored editor
 - copy / paste in menu
-- Tooltips
+
 - separate gui-components -re-use for anacron, fstab, lightdm, rsnapshot, ...
-- Multi Language
 - Wizard-GUI's: Möglichkeit Interval direkt zu tippen ( validieren + aktives Fenster Zeigt getippten Interval )
 - Menü --> Datein --> Drucken
 - Menü --> Bearbeiten --> Rückgängig / Widerholen , Löschen, Einstellungen
-- Menü --> Ansicht Farbschema / 
+- Menü --> Ansicht Farbschema

@@ -16,7 +16,6 @@
 #include "cron_gui.h"
 #include "wizard.h"
 #include <readCrontab.h>
-
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
@@ -297,7 +296,6 @@ void plain2extended(void* context)
 	if( strlen(string) < 1)
 		return;
 
-	char* tempfile;
 	char filePathBuff[1024];
 	memset(filePathBuff,0,sizeof(filePathBuff));
 	int* fd = -1;

@@ -91,8 +91,11 @@ GtkWidget* get_extendedEditor_linebox_from_notebook(const GtkWidget* notebook);
 GtkWidget* get_extendedEditor_toolbox_from_notebook(const GtkWidget* notebook);
 GtkWidget* get_plainTextEditor_textView_from_notebook(const GtkWidget* notebook);
 void plainTextEditor_textView_clear(GtkWidget* plainTextEditor_textView);
+void extendedEditor_linebox_clear(GtkWidget* extendedEditor_linebox);
+
 const char* plainTextEditor_textView_asString(GtkWidget* plainTextEditor_textView);
 void plainTextEditor_textView_append(GtkWidget* plainTextEditor_textView, const gchar* text);
+
 
 void extendedEditorCommentLine2Text(GtkWidget *commentLine, GtkWidget *plainTextEditor_textView);
 
