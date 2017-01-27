@@ -74,7 +74,7 @@ void activate_main_gui(GtkApplication *app, context_base* context)
 	printf("activate_main_gui 4\n");
 	if( context->fileToLoadAtStartup == NULL)
 	{
-		displayInfo("No file selected - attempt to load default crontab from",DEFAULT_CRONTAB_PATH);
+		reportInfo("No file selected - attempt to load default crontab from",DEFAULT_CRONTAB_PATH, context);
 		context->fileToLoadAtStartup = strdup(DEFAULT_CRONTAB_PATH);
 	}
 	printf("activate_main_gui 5\n");
@@ -280,7 +280,7 @@ void extended2plain(void* context)
 		}
 		else
 		{
-			displayError("Error: the following widget could not be converted to string",lineType);
+			reportError("Error: the following widget could not be converted to string",lineType, context);
 			markErrorInLine(line); // TODO;
 		}
 	}
@@ -321,7 +321,7 @@ void plain2extended(void* context)
 	unlink(filePathBuff); // whenever the file or the program is closed, the file is deleted.
 	if(fd < 1)
 	{
-		displayError("Creation of temp file failed with error: ",strerror(errno));
+		reportError("Creation of temp file failed with error: ",strerror(errno), context);
 		return;
 	}
 

@@ -1,13 +1,10 @@
 				
 Must Have:
-Prio 1 - display all kind of error in the statusbar
-
 - as well safe wrong stuff to file ( possibility to safe invalid files )
 
 - bug: application-arguments: verbose gleichzeitig mit pass filename 
 
 - rename packages: crontab-gui + config-gui-base
-- full support for verbose mode
 - display filename
 
 - validate wizard-value when typed

@@ -25,6 +25,8 @@ typedef void (*cb_activate_main_gui)(GtkApplication *app, const char* fileToLoad
 typedef struct
 {
 	GtkWidget* notebook;
+	GtkWidget* statusBox;
+	guint* statusBar_current_contextID;
 	GtkSizeGroup* sizeGroupLineNumbers;
 	GtkWindow *main_window;
 	GtkWidget *window;
@@ -37,6 +39,8 @@ typedef struct
 	void* gui_specific_data;
 } context_base;
 
+void reportInfo(const char* text, const char* param, context_base* context);
+void reportError(const char* text, const char* param, context_base* context);
 
 void initContext(context_base* context);
 void addLineNumber(GtkWidget *extendedEditor_linebox,GtkWidget *lineBox, context_base* context);
@@ -92,6 +96,9 @@ GtkWidget* get_extendedEditor_toolbox_from_notebook(const GtkWidget* notebook);
 GtkWidget* get_plainTextEditor_textView_from_notebook(const GtkWidget* notebook);
 void plainTextEditor_textView_clear(GtkWidget* plainTextEditor_textView);
 void extendedEditor_linebox_clear(GtkWidget* extendedEditor_linebox);
+
+GtkWidget* get_statusBar_from_statusBox(const GtkWidget* statusBox);
+GtkWidget* get_icon_from_statusBox(const GtkWidget* statusBox);
 
 const char* plainTextEditor_textView_asString(GtkWidget* plainTextEditor_textView);
 void plainTextEditor_textView_append(GtkWidget* plainTextEditor_textView, const gchar* text);

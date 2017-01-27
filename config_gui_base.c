@@ -56,16 +56,37 @@ void initContext(context_base* context)
 	context->gui_specific_data = NULL;
 }
 
-void displayInfo(const char* text, const char* param)
+void reportBase(const char* text, const char* param, context_base* context)
 {
-	printf("%s : %s\n",text,param);
-	// TODO
+	GtkWidget* statusBar = get_statusBar_from_statusBox(context->statusBox);
+
+	char message[256];
+	if( param )
+		snprintf(message,sizeof(message), "%s : %s", text, param);
+	else
+		snprintf(message,sizeof(message), "%s", text);
+	gtk_statusbar_pop (GTK_STATUSBAR(statusBar),context->statusBar_current_contextID);
+	context->statusBar_current_contextID = gtk_statusbar_get_context_id (GTK_STATUSBAR(statusBar),"reportInfo");
+	gtk_statusbar_push (GTK_STATUSBAR(statusBar),context->statusBar_current_contextID,message);
+
+	if( context->verboseMode)
+	{
+		printf("%s\n",message);
+	}
 }
 
-void displayError(const char* text, const char* param)
+void reportInfo(const char* text, const char* param, context_base* context)
 {
-	printf("%s : %s\n",text,param);
-	// TODO
+	reportBase(text,param,context);
+	GtkWidget* icon = get_icon_from_statusBox(context->statusBox);
+	gtk_image_set_from_icon_name (icon,"info",GTK_ICON_SIZE_LARGE_TOOLBAR);
+}
+
+void reportError(const char* text, const char* param, context_base* context)
+{
+	reportBase(text,param,context);
+	GtkWidget* icon = get_icon_from_statusBox(context->statusBox);
+	gtk_image_set_from_icon_name (icon,"error",GTK_ICON_SIZE_LARGE_TOOLBAR);
 }
 
 void markErrorInLine(GtkWidget *line)
@@ -145,6 +166,19 @@ GtkWidget* get_extendedEditor_toolbox_from_notebook(const GtkWidget* notebook)
 GtkWidget* get_plainTextEditor_textView_from_notebook(const GtkWidget* notebook)
 {
 	return gtk_notebook_get_nth_page (GTK_NOTEBOOK(notebook),NOTEBOOK_POS_SIMPLE_EDITOR);
+}
+
+GtkWidget* get_statusBar_from_statusBox(const GtkWidget* statusBox)
+{
+	GList *icon = gtk_container_get_children(GTK_CONTAINER(statusBox));
+	GList *statusBar = g_list_next(icon);
+	return statusBar->data;
+}
+
+GtkWidget* get_icon_from_statusBox(const GtkWidget* statusBox)
+{
+	GList *icon = gtk_container_get_children(GTK_CONTAINER(statusBox));
+	return icon->data;
 }
 
 void plainTextEditor_textView_clear(GtkWidget* plainTextEditor_textView)
@@ -269,8 +303,13 @@ void activate_main_gui_base(GtkApplication *app, context_base* context)
 	gtk_widget_set_hexpand (trash,TRUE);
 	gtk_container_add (GTK_CONTAINER (extendedEditor_toolbox), trash);
 
+	context->statusBox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL,0);
+	GtkWidget *icon = gtk_image_new_from_icon_name ("info", GTK_ICON_SIZE_LARGE_TOOLBAR);
+	gtk_container_add (GTK_CONTAINER (context->statusBox), icon);
 	GtkWidget *statusBar = gtk_statusbar_new();
-	gtk_container_add (GTK_CONTAINER (main_box), statusBar);
+	gtk_container_add (GTK_CONTAINER (context->statusBox), statusBar);
+
+	gtk_container_add (GTK_CONTAINER (main_box), context->statusBox);
 }
 
 GtkWidget *dragSource = NULL;
@@ -308,11 +347,9 @@ void fixLineNumbers(GtkWidget *extendedEditor_linebox)
 		GList *firstEntry = gtk_container_get_children(GTK_CONTAINER(line->data));
 		GtkLabel* label = GTK_LABEL(firstEntry->data); // first child
 
-		int length = snprintf( NULL, 0, "%d", lineNumber );
-		char* lineNumberStr = malloc( length + 1 );
-		snprintf( lineNumberStr, length + 1, "%d", lineNumber );
+		char lineNumberStr[10];
+		snprintf(lineNumberStr,sizeof(lineNumberStr), "%d", lineNumber);
 		gtk_label_set_text(label,lineNumberStr);
-		free(lineNumberStr);
 	}
 }
 
@@ -424,19 +461,16 @@ void loadFile( context_base* context, const char* fileToLoad)
 
 	if( fileToLoad == NULL)
 	{
-		printf("Empty filename passed\n");
-		exit(ERROR_EXIT);
+		reportError("Empty filename passed",NULL, context);
+		return;
 	}
 
-	if( context->verboseMode )
-	{
-		printf("Attempt to open file:\n");
-		printf("%s\n",fileToLoad);
-	}
+	reportInfo("Attempt to open file",fileToLoad, context);
+
 	FILE * file = fopen(fileToLoad, "r");
 	if (!file)
 	{
-		fprintf(stderr, "Failed to open file '%s' : %s\n", fileToLoad, strerror(errno));
+		reportError("Failed to open file with error",strerror(errno), context);
 		exit (ERROR_EXIT);
 	}
 
@@ -457,7 +491,7 @@ void loadFile( context_base* context, const char* fileToLoad)
 	}
 	if (fclose(file) == EOF)
 	{
-		perror("fclose");
+		reportError("Failed to close file",fileToLoad, context);
 		exit (ERROR_EXIT);
 	}
 
@@ -468,23 +502,21 @@ void loadFile( context_base* context, const char* fileToLoad)
 
 	if( context->filePathCurrentlyLoaded == 0 )
 	{
-		printf("Out of memory error\n");
+		reportError("Out of memory error",NULL, context);
 		exit(ERROR_EXIT);
 	}
-
 }
 
 int saveFile(char* fileToWrite, context_base* context)
 {
-	if( context->verboseMode )
-	{
-		printf("Attempt to open file to write:\n");
-		printf("%s\n",fileToWrite);
-	}
+	reportInfo("Attempt to open file to write",fileToWrite, context);
+
 	FILE* file  = fopen(fileToWrite,"w+");
 	if (!file)
 	{
-		printf("Failed to open file '%s' : %s\n", fileToWrite, strerror(errno));
+		char message[256];
+		snprintf(message,sizeof(message), "Failed to open file for writing '%s'\0", fileToWrite);
+		reportError(message,strerror(errno), context);
 		return (-2);
 	}
 	if(gtk_notebook_get_current_page (GTK_NOTEBOOK(context->notebook)) == NOTEBOOK_POS_EXTENDED_EDITOR )
@@ -523,13 +555,13 @@ void on_menu_save(GtkWidget *menuItem, context_base* context )
 {
 	if( context->filePathCurrentlyLoaded == NULL )
 	{
-		displayError("No file loaded",""); // TODO: grayed out if no file loaded
+		reportError("No file loaded","", context); // TODO: grayed out if no file loaded
 		return;
 	}
 
 	if(!saveFile(context->filePathCurrentlyLoaded, context))
 	{
-		displayInfo("successfully saved file:", context->filePathCurrentlyLoaded);
+		reportInfo("successfully saved file at", context->filePathCurrentlyLoaded, context);
 	}
 }
 
@@ -545,7 +577,7 @@ void on_menu_save_as(GtkWidget *menuItem, context_base* context )
 		filename = gtk_file_chooser_get_filename (chooser);
 		if(!saveFile(filename, context))
 		{
-			displayInfo("successfully saved file:", filename);
+			reportInfo("successfully saved file at", filename, context);
 		}
 		g_free (filename);
 	}
